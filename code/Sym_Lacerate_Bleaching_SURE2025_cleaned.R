@@ -8,6 +8,7 @@ library(lme4)
 library(emmeans)
 library(qqplotr)
 library(here)
+library(patchwork)
 
 rm(list = ls())
 graphics.off()
@@ -523,6 +524,8 @@ p_symdensity_final <- p_symdensity_final +
     axis.title.x = element_text(margin = margin(t = 1)) # pull label closer
   )
 
+
+
 final_fig <- image_panel + p_symdensity_final +
   plot_layout(widths = c(0.9, 1.7)) +
   plot_annotation(
@@ -977,17 +980,17 @@ library(patchwork)
 img_meta_c8 <- tribble(
   ~row_lab,      ~col_lab, ~file,
   
-  "Inoc\n25°C", "BF", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/I25_dpl14_bf.png",
-  "Inoc\n25°C", "FL", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/I25_dpl14_fl.png",
-  
-  "Inoc\n32°C", "BF", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/I32_dpl14_bf_Snap-995_crop.png",
-  "Inoc\n32°C", "FL", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/I32_dpl14_fl_Snap-994_crop.png",
-  
   "Sym\n25°C",  "BF", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/S25_dpl14_bf.png",
   "Sym\n25°C",  "FL", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/S25_dpl14_fl.png",
   
   "Sym\n32°C",  "BF", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/S32_dpl14_bf.png",
-  "Sym\n32°C",  "FL", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/S32_dpl14_fl.png"
+  "Sym\n32°C",  "FL", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/S32_dpl14_fl.png",
+
+  "Inoc\n25°C", "BF", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/I25_dpl14_bf.png",
+  "Inoc\n25°C", "FL", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/I25_dpl14_fl.png",
+  
+  "Inoc\n32°C", "BF", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/I32_dpl14_bf_Snap-995_crop.png",
+  "Inoc\n32°C", "FL", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/I32_dpl14_fl_Snap-994_crop.png"
 )
 
 img_meta_c8
