@@ -387,6 +387,9 @@ for (i in seq_len(nrow(run_info))) {
   )
 }
 
+
+
+
 # ============================================================
 # 6) COMBINE OUTPUTS
 # ============================================================
@@ -467,334 +470,7 @@ trace_labels <- all_full_traces %>%
   filter(clock_time == max(clock_time, na.rm = TRUE)) %>%
   ungroup()
 
-p_full_trace_manual <- ggplot(
-  all_full_traces,
-  aes(x = clock_time, y = oxygen_conc_nmol_l, group = well, color = manual_group)
-) +
-  geom_rect(
-    data = window_info,
-    aes(
-      xmin = window_start_clock,
-      xmax = window_end_clock,
-      ymin = -Inf,
-      ymax = Inf
-    ),
-    inherit.aes = FALSE,
-    fill = "grey70",
-    alpha = 0.22
-  ) +
-  geom_line(alpha = 0.8, linewidth = 0.55) +
-  facet_wrap(~ plate_name, scales = "free_x", ncol = 2) +
-  scale_color_manual(
-    values = c(
-      "Unassigned" = "grey70",
-      "Discard"    = "black",
-      "Blank"      = "#7F7F7F",
-      "Apo"        = "#3B6FB6",
-      "Sym"        = "#8C564B"
-    ),
-    na.value = "grey85"
-  ) +
-  scale_x_datetime(
-    date_labels = "%I:%M %p",
-    expand = expansion(mult = c(0.01, 0.03))
-  ) +
-  labs(
-    title = "Full oxygen traces with captured analysis window",
-    x = "Clock time",
-    y = expression(paste("Oxygen concentration (nmol/L)")),
-    color = "Manual group"
-  ) +
-  theme_bw() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1)
-  )
 
-p_full_trace_manual
-
-ggsave(
-  file.path(out_dir, "ALL_RUNS_full_trace_manual_groups_oxygen_concentration_nmol.png"),
-  p_full_trace_manual,
-  width = 14,
-  height = 9,
-  dpi = 600
-)
-
-p_full_trace_manual_labeled <- ggplot(
-  all_full_traces,
-  aes(x = clock_time, y = oxygen_conc_nmol_l, group = well, color = manual_group)
-) +
-  geom_rect(
-    data = window_info,
-    aes(
-      xmin = window_start_clock,
-      xmax = window_end_clock,
-      ymin = -Inf,
-      ymax = Inf
-    ),
-    inherit.aes = FALSE,
-    fill = "grey70",
-    alpha = 0.22
-  ) +
-  geom_line(alpha = 0.8, linewidth = 0.55) +
-  geom_text(
-    data = trace_labels,
-    aes(label = well),
-    hjust = -0.05,
-    size = 2.7,
-    show.legend = FALSE
-  ) +
-  facet_wrap(~ plate_name, scales = "free_x", ncol = 2) +
-  scale_color_manual(
-    values = c(
-      "Unassigned" = "grey70",
-      "Discard"    = "black",
-      "Blank"      = "red",
-      "Apo"        = "#3B6FB6",
-      "Sym"        = "#8C564B"
-    ),
-    na.value = "grey85"
-  ) +
-  scale_x_datetime(
-    date_labels = "%I:%M %p",
-    expand = expansion(mult = c(0.01, 0.10))
-  ) +
-  labs(
-    title = "Full oxygen traces with captured window and well labels",
-    x = "Clock time",
-    y = expression(paste("Oxygen concentration (nmol/L)")),
-    color = "Manual group"
-  ) +
-  theme_bw() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1)
-  )
-
-p_full_trace_manual_labeled
-
-
-p_full_trace_manual_labeled_tight <- ggplot(
-  all_full_traces,
-  aes(
-    x = clock_time,
-    y = oxygen_conc_nmol_l,
-    group = well,
-    color = manual_group
-  )
-) +
-  geom_rect(
-    data = window_info,
-    aes(
-      xmin = window_start_clock,
-      xmax = window_end_clock,
-      ymin = -Inf,
-      ymax = Inf
-    ),
-    inherit.aes = FALSE,
-    fill = "grey70",
-    alpha = 0.22
-  ) +
-  geom_line(alpha = 0.8, linewidth = 0.55) +
-  geom_text(
-    data = trace_labels,
-    aes(label = well),
-    hjust = -0.05,
-    size = 2.7,
-    show.legend = FALSE
-  ) +
-  facet_wrap(~ plate_name, scales = "free_x", ncol = 2) +
-  scale_color_manual(
-    values = c(
-      "Unassigned" = "#D9D9D9",
-      "Discard"    = "#E66101",  # strong orange (replaces black)
-      "Blank"      = "#7A5DC7",  # purple
-      "Apo"        = "#8F8F8F",  # gray
-      "Sym"        = "#A65628"   # brown
-    ),
-    na.value = "#EAEAEA"
-  ) +
-  scale_x_datetime(
-    date_labels = "%I:%M %p",
-    expand = expansion(mult = c(0.01, 0.10))
-  ) +
-  labs(
-    x = "Clock time",
-    y = expression(paste("Oxygen concentration (nmol/L)")),
-    color = "Manual group"
-  ) +
-  theme_bw() +
-  theme(
-    text = element_text(family = "sans"),
-    panel.grid = element_blank(),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.background = element_rect(fill = "white", color = NA),
-    strip.background = element_rect(fill = "white", color = "black", linewidth = 1),
-    strip.text = element_text(size = 13, face = "bold"),
-    axis.title = element_text(size = 13),
-    axis.text = element_text(size = 11),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.title = element_text(size = 12),
-    legend.text = element_text(size = 11),
-    legend.position = "right"
-  )
-
-
-p_full_trace_manual_labeled_tight <- ggplot(
-  all_full_traces,
-  aes(
-    x = clock_time,
-    y = oxygen_conc_nmol_l,
-    group = well,
-    color = manual_group
-  )
-) +
-  geom_rect(
-    data = window_info,
-    aes(
-      xmin = window_start_clock,
-      xmax = window_end_clock,
-      ymin = -Inf,
-      ymax = Inf
-    ),
-    inherit.aes = FALSE,
-    fill = "grey70",
-    alpha = 0.15
-  ) +
-  geom_line(alpha = 0.85, linewidth = 0.6) +
-  geom_text(
-    data = trace_labels,
-    aes(label = well),
-    hjust = -0.05,
-    size = 2.7,
-    show.legend = FALSE
-  ) +
-  facet_wrap(
-    ~ plate_name,
-    scales = "free_x",
-    ncol = 2,
-    labeller = labeller(
-      plate_name = c(
-        "20260317_Lacerate_32C_Plate1" = "Plate A",
-        "20260319_Lacerate_25C_Plate2" = "Plate B",
-        "20260324_Lacerate_32C_Plate3" = "Plate C",
-        "20260326_Lacerate_25C_Plate4" = "Plate D"
-      )
-    )
-  ) +
-  scale_color_manual(
-    values = c(
-      "Unassigned" = "#D9D9D9",
-      "Discard"    = "#E66101",
-      "Blank"      = "#7A5DC7",
-      "Apo"        = "#8F8F8F",
-      "Sym"        = "#A65628"
-    ),
-    na.value = "#EAEAEA"
-  ) +
-  scale_x_datetime(
-    date_labels = "%I:%M %p",
-    expand = expansion(mult = c(0.01, 0.10))
-  ) +
-  labs(
-    x = "Clock time",
-    y = expression(paste("Oxygen concentration (nmol/L)")),
-    color = "Manual group"
-  ) +
-  theme_bw() +
-  theme(
-    text = element_text(family = "sans"),
-    panel.grid = element_blank(),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.background = element_rect(fill = "white", color = NA),
-    strip.background = element_rect(fill = "white", color = "black", linewidth = 1),
-    strip.text = element_text(size = 13, face = "bold"),
-    axis.title = element_text(size = 13),
-    axis.text = element_text(size = 11),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.title = element_text(size = 12),
-    legend.text = element_text(size = 11),
-    legend.position = "right"
-  )
-
-
-p_full_trace_manual_labeled_tight <- ggplot(
-  all_full_traces,
-  aes(
-    x = clock_time,
-    y = oxygen_conc_nmol_l,
-    group = well,
-    color = manual_group
-  )
-) +
-  geom_rect(
-    data = window_info,
-    aes(
-      xmin = window_start_clock,
-      xmax = window_end_clock,
-      ymin = -Inf,
-      ymax = Inf
-    ),
-    inherit.aes = FALSE,
-    fill = "grey70",
-    alpha = 0.15
-  ) +
-  geom_line(alpha = 0.85, linewidth = 0.6) +
-  geom_text(
-    data = trace_labels,
-    aes(label = well),
-    hjust = -0.05,
-    size = 2.7,
-    show.legend = FALSE
-  ) +
-  facet_wrap(
-    ~ plate_name,
-    scales = "free_x",
-    ncol = 2,
-    labeller = labeller(
-      plate_name = c(
-        "20260317_Lacerate_32C_Plate1" = "Plate A - 32°C",
-        "20260319_Lacerate_25C_Plate2" = "Plate B - 25°C",
-        "20260324_Lacerate_32C_Plate3" = "Plate C - 32°C",
-        "20260326_Lacerate_25C_Plate4" = "Plate D - 25°C"
-      )
-    )
-  ) +
-  scale_color_manual(
-    values = c(
-      "Unassigned" = "#D9D9D9",
-      "Discard"    = "#E66101",
-      "Blank"      = "#7A5DC7",
-      "Apo"        = "#8F8F8F",
-      "Sym"        = "#A65628"
-    ),
-    na.value = "#EAEAEA"
-  ) +
-  scale_x_datetime(
-    date_labels = "%I:%M %p",
-    expand = expansion(mult = c(0.01, 0.10))
-  ) +
-  labs(
-    x = "Clock time",
-    y = expression(paste("Oxygen concentration (nmol/L)")),
-    color = "Manual group"
-  ) +
-  theme_bw() +
-  theme(
-    text = element_text(family = "sans"),
-    panel.grid = element_blank(),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.background = element_rect(fill = "white", color = NA),
-    strip.background = element_rect(fill = "white", color = "black", linewidth = 1),
-    strip.text = element_text(size = 13, face = "bold"),
-    axis.title = element_text(size = 13),
-    axis.text = element_text(size = 11),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.title = element_text(size = 12),
-    legend.text = element_text(size = 11),
-    legend.position = "right"
-  )
-
-p_full_trace_manual_labeled_tight
 
 manual_trace_counts <- all_full_traces %>%
   distinct(plate_name, well, manual_group) %>%
@@ -839,7 +515,7 @@ trace_labels_right <- all_full_traces %>%
 # ----------------------------
 # Plot with elapsed time (hours)
 # ----------------------------
-p_full_trace_manual_labeled_tight_real <- ggplot(
+FigS3_all_tracing <- ggplot(
   all_full_traces,
   aes(
     x = time_hours,
@@ -925,12 +601,12 @@ p_full_trace_manual_labeled_tight_real <- ggplot(
     legend.position = "right"
   )
 
-p_full_trace_manual_labeled_tight_real
+FigS3_all_tracing
 
 ggsave(
   filename = "FigS3_ALL_RUNS_full_trace_manual_groups_labeled_oxygen_concentration_nmol_tight.png",
-  plot = p_full_trace_manual_labeled_tight_real,
-  path = "~/Documents/GitHub/heatinglacerate/figs",
+  plot = FigS3_all_tracing,
+  path = "~/Documents/GitHub/heating_lacerates_final/figs",
   device = "png",
   width = 15,
   height = 9,
@@ -941,8 +617,8 @@ ggsave(
 
 ggsave(
   filename = "FigS3_ALL_RUNS_full_trace_manual_groups_labeled_oxygen_concentration_nmol_tight.pdf",
-  plot = p_full_trace_manual_labeled_tight_real,
-  path = "~/Documents/GitHub/heatinglacerate/figs",
+  plot = FigS3_all_tracing,
+  path = "~/Documents/GitHub/heating_lacerates_final/figs",
   device = pdf,
   width = 15,
   height = 9,
@@ -968,7 +644,7 @@ area_plot_dat <- area_data %>%
     temperature = factor(temperature, levels = c("25C", "32C"))
   )
 
-p_pedal_area_facet_tight <- ggplot(
+p_pedal_area <- ggplot(
   area_plot_dat %>%
     mutate(
       color_group = case_when(
@@ -999,7 +675,7 @@ p_pedal_area_facet_tight <- ggplot(
   ) +
   facet_wrap(~ factor(treatment, levels = c("Sym", "Apo"))) +
   
-  # 🔥 4-color scheme (matches May4)
+  # 🔥 4-color scheme
   scale_color_manual(
     values = c(
       "sym_25" = "#3B6FB6",
@@ -1033,12 +709,12 @@ p_pedal_area_facet_tight <- ggplot(
     legend.position = "none"
   )
 
-p_pedal_area_facet_tight
+p_pedal_area
 
 ggsave(
   filename = "FigS2_Resp_pedal_area.png",
-  plot = p_pedal_area_facet_tight,
-  path = "~/Documents/GitHub/heatinglacerate/figs",
+  plot = p_pedal_area,
+  path = "~/Documents/GitHub/heating_lacerates_final/figs",
   device = "png",
   width = 7,
   height = 5,
@@ -1049,8 +725,8 @@ ggsave(
 
 ggsave(
   filename = "FigS2_Resp_pedal_area.pdf",
-  plot = p_pedal_area_facet_tight,
-  path = "~/Documents/GitHub/heatinglacerate/figs",
+  plot = p_pedal_area,
+  path = "~/Documents/GitHub/heating_lacerates_final/figs",
   device = pdf,
   width = 7,
   height = 5,
@@ -1223,194 +899,18 @@ cld_plot_norm <- cld_plot %>%
 print(cld_plot_raw)
 print(cld_plot_norm)
 
-p_four_groups_raw_stats_final_nmol <- ggplot(
-  plot_dat,
-  aes(
-    x = treatment,
-    y = oxygen_decline_rate_nmol_l_h,
-    color = temperature,
-    shape = treatment
-  )
-) +
-  geom_jitter(
-    position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.5),
-    size = 2.5,
-    alpha = 0.8
-  ) +
-  geom_boxplot(
-    aes(
-      group = interaction(treatment, temperature),
-      color = temperature
-    ),
-    position = position_dodge(width = 0.5),
-    width = 0.4,
-    fill = NA,
-    linewidth = 1,
-    outlier.shape = NA,
-    show.legend = FALSE
-  ) +
-  geom_text(
-    data = cld_plot_raw,
-    aes(
-      x = as.numeric(treatment) - 0.10,
-      y = y,
-      label = .group,
-      group = temperature
-    ),
-    position = position_dodge(width = 0.5),
-    inherit.aes = FALSE,
-    size = 4.5,
-    fontface = "bold",
-    family = "sans",
-    color = "black",
-    show.legend = FALSE
-  ) +
-  scale_color_manual(
-    values = c("25C" = "blue", "32C" = "red"),
-    name = "Temperature"
-  ) +
-  scale_shape_manual(
-    values = c("Apo" = 16, "Sym" = 15),
-    name = "Symbiotic State"
-  ) +
-  guides(
-    shape = guide_legend(
-      override.aes = list(
-        linetype = 0,
-        fill = NA,
-        size = 3.5,
-        color = "black"
-      )
-    )
-  ) +
-  labs(
-    x = "Group",
-    y = expression(paste("Oxygen decline rate (nmol/L/h)"))
-  ) +
-  theme_bw() +
-  theme(
-    text = element_text(family = "sans"),
-    panel.grid = element_blank(),
-    axis.title = element_text(size = 12),
-    axis.text = element_text(size = 11),
-    legend.title = element_text(size = 11),
-    legend.text = element_text(size = 11),
-    legend.position = c(0.02, 0.98),
-    legend.justification = c(0, 1),
-    legend.background = element_blank(),
-    legend.key = element_blank()
-  )
-
-p_four_groups_raw_stats_final_nmol
-
-p_four_groups_norm_stats_final_nmol <- ggplot(
-  plot_dat,
-  aes(
-    x = treatment,
-    y = respiration_norm_nmol,
-    color = temperature,
-    shape = treatment
-  )
-) +
-  geom_jitter(
-    position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.5),
-    size = 2.5,
-    alpha = 0.8
-  ) +
-  geom_boxplot(
-    aes(
-      group = interaction(treatment, temperature),
-      color = temperature
-    ),
-    position = position_dodge(width = 0.5),
-    width = 0.4,
-    fill = NA,
-    linewidth = 1,
-    outlier.shape = NA,
-    show.legend = FALSE
-  ) +
-  geom_text(
-    data = cld_plot_norm,
-    aes(
-      x = as.numeric(treatment) + 0.10,
-      y = y,
-      label = .group,
-      group = temperature
-    ),
-    position = position_dodge(width = 0.5),
-    inherit.aes = FALSE,
-    size = 4.5,
-    fontface = "bold",
-    family = "sans",
-    color = "black",
-    show.legend = FALSE
-  ) +
-  scale_color_manual(
-    values = c("25C" = "blue", "32C" = "red"),
-    name = "Temperature"
-  ) +
-  scale_shape_manual(
-    values = c("Apo" = 16, "Sym" = 15),
-    name = "Symbiotic State"
-  ) +
-  guides(
-    shape = guide_legend(
-      override.aes = list(
-        linetype = 0,
-        fill = NA,
-        size = 3.5,
-        color = "black"
-      )
-    )
-  ) +
-  labs(
-    x = "Group",
-    y = expression(paste("Oxygen decline rate (nmol/L/h/mm"^2, ")"))
-  ) +
-  theme_bw() +
-  theme(
-    text = element_text(family = "sans"),
-    panel.grid = element_blank(),
-    axis.title = element_text(size = 12),
-    axis.text = element_text(size = 11),
-    legend.title = element_text(size = 11),
-    legend.text = element_text(size = 11),
-    legend.position = c(0.02, 0.98),
-    legend.justification = c(0, 1),
-    legend.background = element_blank(),
-    legend.key = element_blank()
-  )
-
-p_four_groups_norm_stats_final_nmol
-
 
 # ============================================================
-# 17) LOG-TRANSFORMED DATA + FINAL OXYGEN-BASED FIGURES
-# ============================================================
-
-# ============================================================
-# 17A) CREATE LOG-TRANSFORMED DATA
+# 16) LOG-TRANSFORMED DATA FOR FINAL FIGURE
 # ============================================================
 
 plot_dat_final <- plot_dat %>%
   mutate(
-    log10_respiration = log10(respiration_norm_nmol),
-    log10_oxygen_decline = log10(oxygen_decline_rate_nmol_l_h)
+    log10_respiration = log10(respiration_norm_nmol)
   )
 
-# Optional sanity checks
-summary(plot_dat_final$respiration_norm_nmol)
-summary(plot_dat_final$log10_respiration)
-summary(plot_dat_final$oxygen_decline_rate_nmol_l_h)
-summary(plot_dat_final$log10_oxygen_decline)
-
-range(plot_dat_final$log10_respiration)
-range(plot_dat_final$log10_oxygen_decline)
-
-
 # ============================================================
-# 17B) LABEL POSITIONS FOR LOG-SCALE PLOTS
-# IMPORTANT: use log-transformed values for label placement
+# LABEL POSITIONS FOR TUKEY LETTERS
 # ============================================================
 
 label_pos_log_norm <- plot_dat_final %>%
@@ -1420,415 +920,15 @@ label_pos_log_norm <- plot_dat_final %>%
     .groups = "drop"
   )
 
-label_pos_log_raw <- plot_dat_final %>%
-  group_by(combined_treatment) %>%
-  summarise(
-    y = max(log10_oxygen_decline, na.rm = TRUE) + 0.10,
-    .groups = "drop"
-  )
-
 cld_plot_log_norm <- cld_plot %>%
   left_join(label_pos_log_norm, by = "combined_treatment")
 
-cld_plot_log_raw <- cld_plot %>%
-  left_join(label_pos_log_raw, by = "combined_treatment")
-
 
 # ============================================================
-# 17C) LOG-TRANSFORMED NORMALIZED RESPIRATION PLOT
+# FINAL FIGURE
 # ============================================================
 
-p_four_groups_norm_stats_log_final <- ggplot(
-  plot_dat_final,
-  aes(
-    x = treatment,
-    y = log10_respiration,
-    color = temperature,
-    shape = treatment
-  )
-) +
-  geom_jitter(
-    position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.5),
-    size = 2.5,
-    alpha = 0.8
-  ) +
-  geom_boxplot(
-    aes(group = interaction(treatment, temperature)),
-    position = position_dodge(width = 0.5),
-    width = 0.4,
-    fill = NA,
-    linewidth = 1,
-    outlier.shape = NA,
-    show.legend = FALSE
-  ) +
-  geom_text(
-    data = cld_plot_log_norm,
-    aes(
-      x = as.numeric(treatment) + 0.10,
-      y = y,
-      label = .group,
-      group = temperature
-    ),
-    position = position_dodge(width = 0.5),
-    inherit.aes = FALSE,
-    size = 4.5,
-    fontface = "bold",
-    family = "sans",
-    color = "black",
-    show.legend = FALSE
-  ) +
-  scale_color_manual(
-    values = c("25C" = "blue", "32C" = "red"),
-    name = "Temperature"
-  ) +
-  scale_shape_manual(
-    values = c("Apo" = 16, "Sym" = 15),
-    name = "Symbiotic State"
-  ) +
-  guides(
-    shape = guide_legend(
-      override.aes = list(
-        linetype = 0,
-        fill = NA,
-        size = 3.5,
-        color = "black"
-      )
-    )
-  ) +
-  labs(
-    x = "Group",
-    y = expression(paste("Log"[10], " oxygen decline rate (nmol/L/h/mm"^2, ")"))
-  ) +
-  theme_bw() +
-  theme(
-    text = element_text(family = "sans"),
-    panel.grid = element_blank(),
-    axis.title = element_text(size = 12),
-    axis.text = element_text(size = 11),
-    legend.title = element_text(size = 11),
-    legend.text = element_text(size = 11),
-    legend.position = c(0.02, 0.98),
-    legend.justification = c(0, 1),
-    legend.background = element_blank(),
-    legend.key = element_blank()
-  )
-
-
-# ============================================================
-# 17D) RAW NMOL PLOT (UNCHANGED SCALE)
-# ============================================================
-
-p_four_groups_norm_stats_final_nmol <- ggplot(
-  plot_dat,
-  aes(
-    x = treatment,
-    y = respiration_norm_nmol,
-    color = temperature,
-    shape = treatment
-  )
-) +
-  geom_jitter(
-    position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.5),
-    size = 2.5,
-    alpha = 0.8
-  ) +
-  geom_boxplot(
-    aes(
-      group = interaction(treatment, temperature),
-      color = temperature
-    ),
-    position = position_dodge(width = 0.5),
-    width = 0.4,
-    fill = NA,
-    linewidth = 1,
-    outlier.shape = NA,
-    show.legend = FALSE
-  ) +
-  geom_text(
-    data = cld_plot_norm,
-    aes(
-      x = as.numeric(treatment) + 0.10,
-      y = y,
-      label = .group,
-      group = temperature
-    ),
-    position = position_dodge(width = 0.5),
-    inherit.aes = FALSE,
-    size = 4.5,
-    fontface = "bold",
-    family = "sans",
-    color = "black",
-    show.legend = FALSE
-  ) +
-  scale_color_manual(
-    values = c("25C" = "blue", "32C" = "red"),
-    name = "Temperature"
-  ) +
-  scale_shape_manual(
-    values = c("Apo" = 16, "Sym" = 15),
-    name = "Symbiotic State"
-  ) +
-  guides(
-    shape = guide_legend(
-      override.aes = list(
-        linetype = 0,
-        fill = NA,
-        size = 3.5,
-        color = "black"
-      )
-    )
-  ) +
-  labs(
-    x = "Group",
-    y = expression(paste("Oxygen decline rate (nmol/L/h/mm"^2, ")"))
-  ) +
-  theme_bw() +
-  theme(
-    text = element_text(family = "sans"),
-    panel.grid = element_blank(),
-    axis.title = element_text(size = 12),
-    axis.text = element_text(size = 11),
-    legend.title = element_text(size = 11),
-    legend.text = element_text(size = 11),
-    legend.position = c(0.02, 0.98),
-    legend.justification = c(0, 1),
-    legend.background = element_blank(),
-    legend.key = element_blank()
-  )
-
-
-# ============================================================
-# 17E) LOG-TRANSFORMED RAW OXYGEN DECLINE PLOT
-# ============================================================
-
-p_four_groups_raw_stats_log_final <- ggplot(
-  plot_dat_final,
-  aes(
-    x = treatment,
-    y = log10_oxygen_decline,
-    color = temperature,
-    shape = treatment
-  )
-) +
-  geom_jitter(
-    position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.5),
-    size = 2.5,
-    alpha = 0.8
-  ) +
-  geom_boxplot(
-    aes(group = interaction(treatment, temperature)),
-    position = position_dodge(width = 0.5),
-    width = 0.4,
-    fill = NA,
-    linewidth = 1,
-    outlier.shape = NA,
-    show.legend = FALSE
-  ) +
-  geom_text(
-    data = cld_plot_log_raw,
-    aes(
-      x = as.numeric(treatment) - 0.10,
-      y = y,
-      label = .group,
-      group = temperature
-    ),
-    position = position_dodge(width = 0.5),
-    inherit.aes = FALSE,
-    size = 4.5,
-    fontface = "bold",
-    family = "sans",
-    color = "black",
-    show.legend = FALSE
-  ) +
-  scale_color_manual(
-    values = c("25C" = "blue", "32C" = "red"),
-    name = "Temperature"
-  ) +
-  scale_shape_manual(
-    values = c("Apo" = 16, "Sym" = 15),
-    name = "Symbiotic State"
-  ) +
-  guides(
-    shape = guide_legend(
-      override.aes = list(
-        linetype = 0,
-        fill = NA,
-        size = 3.5,
-        color = "black"
-      )
-    )
-  ) +
-  labs(
-    x = "Group",
-    y = expression(paste("Log"[10], " oxygen decline rate (nmol/L/h)"))
-  ) +
-  theme_bw() +
-  theme(
-    text = element_text(family = "sans"),
-    panel.grid = element_blank(),
-    axis.title = element_text(size = 12),
-    axis.text = element_text(size = 11),
-    legend.title = element_text(size = 11),
-    legend.text = element_text(size = 11),
-    legend.position = c(0.02, 0.98),
-    legend.justification = c(0, 1),
-    legend.background = element_blank(),
-    legend.key = element_blank()
-  )
-
-
-# ============================================================
-# 17F) PRINT FIGURES
-# ============================================================
-
-
-p_four_groups_raw_stats_final_nmol
-p_four_groups_raw_stats_log_final
-
-p_four_groups_norm_stats_final_nmol
-p_four_groups_norm_stats_log_final
-
-#Log-transform but don't change the y-values
-p_four_groups_raw_stats_log_final_other <- p_four_groups_raw_stats_final_nmol +
-  scale_y_log10() +
-  labs(y = expression(paste("Log10 oxygen decline rate (nmol/L/h/mm"^2, ")")))
-p_four_groups_raw_stats_log_final_other
-
-p_four_groups_norm_stats_log_final_other <- p_four_groups_norm_stats_final_nmol +
-  scale_y_log10() +
-  labs(y = expression(paste("Log10 oxygen decline rate (nmol/L/h/mm"^2, ")")))
-p_four_groups_norm_stats_log_final_other
-
-
-p_four_groups_norm_stats_log_final_FACET <- ggplot(
-  plot_dat_final,
-  aes(
-    x = temperature,
-    y = log10_respiration,
-    color = temperature
-  )
-) +
-  geom_jitter(
-    width = 0.12,
-    size = 2.5,
-    alpha = 0.8
-  ) +
-  geom_boxplot(
-    width = 0.45,
-    fill = NA,
-    linewidth = 1,
-    outlier.shape = NA,
-    show.legend = FALSE
-  ) +
-  geom_text(
-    data = cld_plot_log_norm,
-    aes(
-      x = temperature,
-      y = y,
-      label = .group
-    ),
-    inherit.aes = FALSE,
-    size = 4.5,
-    fontface = "bold",
-    family = "sans",
-    color = "black"
-  ) +
-  facet_wrap(~ factor(treatment, levels = c("Sym", "Apo"))) +
-  scale_color_manual(
-    values = c("25C" = "blue", "32C" = "red"),
-    labels = c("25C" = "25°C", "32C" = "32°C"),
-    name = "Treatment"
-  ) +
-  scale_x_discrete(
-    labels = c("25C" = "25°C", "32C" = "32°C")
-  ) +
-  labs(
-    x = "Treatment",
-    y = expression(paste("Log"[10], " respiration rate (nmol/L/h/mm"^2, ")"))
-  ) +
-  theme_bw() +
-  theme(
-    text = element_text(family = "sans"),
-    panel.grid = element_blank(),
-    axis.title = element_text(size = 12),
-    axis.text = element_text(size = 11),
-    strip.text = element_text(size = 12, face = "bold"),
-    legend.title = element_text(size = 11),
-    legend.text = element_text(size = 11),
-    legend.position = c(0.02, 0.98),
-    legend.justification = c(0, 1),
-    legend.background = element_blank(),
-    legend.key = element_blank()
-  )
-
-p_four_groups_norm_stats_log_final_FACET
-
-p_four_groups_norm_stats_log_final_FACET_tight <- ggplot(
-  plot_dat_final,
-  aes(
-    x = temperature,
-    y = log10_respiration,
-    color = temperature
-  )
-) +
-  geom_boxplot(
-    width = 0.42,
-    fill = NA,
-    linewidth = 1.4,
-    outlier.shape = NA,
-    show.legend = FALSE
-  ) +
-  geom_jitter(
-    width = 0.08,
-    size = 2.0,
-    alpha = 0.7,
-    show.legend = FALSE
-  ) +
-  geom_text(
-    data = cld_plot_log_norm,
-    aes(
-      x = temperature,
-      y = y,
-      label = .group
-    ),
-    inherit.aes = FALSE,
-    size = 4.8,
-    fontface = "bold",
-    family = "sans",
-    color = "black"
-  ) +
-  facet_wrap(~ factor(treatment, levels = c("Sym", "Apo"))) +
-  scale_color_manual(
-    values = c("25C" = "blue", "32C" = "red")
-  ) +
-  scale_x_discrete(
-    labels = c("25C" = "25°C", "32C" = "32°C")
-  ) +
-  scale_y_continuous(
-    expand = expansion(mult = c(0.02, 0.04))
-  ) +
-  coord_cartesian(ylim = c(1.15, 2.65)) +
-  labs(
-    x = "Treatment",
-    y = expression(paste("Log"[10], " respiration rate (nmol/L/h/mm"^2, ")"))
-  ) +
-  theme_bw() +
-  theme(
-    text = element_text(family = "sans"),
-    panel.grid = element_blank(),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.background = element_rect(fill = "white", color = NA),
-    strip.background = element_rect(fill = "white", color = "black", linewidth = 1),
-    strip.text = element_text(size = 13, face = "bold"),
-    axis.title = element_text(size = 13),
-    axis.text = element_text(size = 12),
-    legend.position = "none"
-  )
-
-p_four_groups_norm_stats_log_final_FACET_tight
-
-##FINAL for now
-final_plot_May4 <- ggplot(
+Fig5 <- ggplot(
   plot_dat_final %>%
     mutate(
       color_group = case_when(
@@ -1903,12 +1003,12 @@ final_plot_May4 <- ggplot(
     legend.position = "none"
   )
 
-final_plot_May4
+Fig5
 
 ggsave(
   filename = "Fig5_final_plot_May4.png",
-  plot = final_plot_May4,
-  path = "~/Documents/GitHub/heatinglacerate/figs",
+  plot = Fig5,
+  path = "~/Documents/GitHub/heating_lacerates_final/figs",
   device = "png",
   width = 7,
   height = 5,
@@ -1919,8 +1019,8 @@ ggsave(
 
 ggsave(
   filename = "Fig5_final_plot_May4.pdf",
-  plot = final_plot_May4,
-  path = "~/Documents/GitHub/heatinglacerate/figs",
+  plot = Fig5,
+  path = "~/Documents/GitHub/heating_lacerates_final/figs",
   device = pdf,
   width = 7,
   height = 5,
