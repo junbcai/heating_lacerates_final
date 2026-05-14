@@ -1,0 +1,5 @@
+"Source","Sum_Sq","df","F_value","p_value"
+"treatment",4676.3,1,99.14,"< 1e-04"
+"day",1150.9,7,3.49,"0.001291"
+"treatment:day",2566.5,7,7.77,"< 1e-04"
+"Residuals",14951.8,317,NA,"NA"

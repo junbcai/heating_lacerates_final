@@ -16,11 +16,11 @@ graphics.off()
 #Set working directory
 
 getwd()
-setwd("/Users/junbc/Documents/GitHub/heatinglacerate/")
+setwd("/Users/junbc/Documents/GitHub/heating_lacerates_final/")
 
 # Read symbiont density data
 symdensity_raw <- read.csv(
-  "data/Summer2025_SymDensity_new.csv",
+  "data/LacerateSymDensity.csv",
   check.names = FALSE
 )
 
@@ -65,7 +65,7 @@ symdensity_n <- symdensity_wellmeans %>%
     .groups = "drop"
   )
 
-# Plot
+# Plots
 p_symdensity_v1 <- ggplot(
   symdensity_wellmeans,
   aes(x = day, y = calculation, fill = treatment)
@@ -217,49 +217,6 @@ tukey_symdensity <- summary(pairs(emm_symdensity, adjust = "tukey"))
 print(tukey_symdensity)
 
 ## =================================
-## 7. Welch's t-tests by day
-## =================================
-welch_symdensity <- symdensity_stats %>%
-  group_by(day) %>%
-  do(
-    tidy(t.test(calculation ~ treatment, data = ., var.equal = FALSE))
-  ) %>%
-  ungroup() %>%
-  mutate(
-    p_holm = p.adjust(p.value, method = "holm")
-  )
-
-print(welch_symdensity)
-
-## =================================
-## 8. Light checks relevant to Welch's
-## =================================
-
-# Summary stats by group
-symdensity_stats %>%
-  group_by(day, treatment) %>%
-  summarise(
-    n = n(),
-    mean = mean(calculation, na.rm = TRUE),
-    sd = sd(calculation, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-# QQ plots by group
-ggplot(symdensity_stats, aes(sample = calculation)) +
-  stat_qq() +
-  stat_qq_line() +
-  facet_grid(treatment ~ day) +
-  theme_bw()
-
-# Variance check by day
-welch_variance_checks <- symdensity_stats %>%
-  group_by(day) %>%
-  levene_test(calculation ~ treatment)
-
-welch_variance_checks
-
-## =================================
 ## 9. Build custom letters from Tukey
 ## Force Sym-Control = a, Sym-HS = b when significant
 ## =================================
@@ -349,33 +306,6 @@ p_symdensity_final <- ggplot(
 
 p_symdensity_final
 
-## =================================
-## 12. Save final figure
-## =================================
-ggsave(
-  filename = "SymDensity_Figure.png",
-  plot = p_symdensity_final,
-  path = "~/Documents/GitHub/heatinglacerate/figs/",
-  device = "png",
-  width = 7,
-  height = 5,
-  units = "in",
-  dpi = 600,
-#  compression = "lzw",
-  bg = "white"
-)
-
-ggsave(
-  filename = "SymDensity_Figure.pdf",
-  plot = p_symdensity_final,
-  path = "~/Documents/GitHub/heatinglacerate/figs/",
-  device = pdf,
-  width = 7,
-  height = 5,
-  units = "in",
-  bg = "white"
-)
-
 
 ## Make PANEL IMAGE ##
 library(tidyverse)
@@ -390,31 +320,31 @@ library(grid)
 img_meta <- tribble(
   ~row_lab, ~col_lab, ~subcol, ~file,
   
-  "Apo\n25°C", "Day 7",  1, "/Users/junbc/Pictures/Panel/A25_dpl7.png",
-  "Apo\n25°C", "Day 14", 1, "/Users/junbc/Pictures/Panel/A25_dpl14.png",
+  "Apo\n25°C", "Day 7",  1, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/A25_dpl7.png",
+  "Apo\n25°C", "Day 14", 1, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/A25_dpl14.png",
   
-  "Apo\n32°C", "Day 7",  1, "/Users/junbc/Pictures/Panel/A32_dpl7.png",
-  "Apo\n32°C", "Day 14", 1, "/Users/junbc/Pictures/Panel/A32_dpl14.png",
+  "Apo\n32°C", "Day 7",  1, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/A32_dpl7.png",
+  "Apo\n32°C", "Day 14", 1, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/A32_dpl14.png",
   
-  "Inoc\n25°C", "Day 7",  1, "/Users/junbc/Pictures/Panel/I25_dpl7_bf.png",
-  "Inoc\n25°C", "Day 7",  2, "/Users/junbc/Pictures/Panel/I25_dpl7_fl.png",
-  "Inoc\n25°C", "Day 14", 1, "/Users/junbc/Pictures/Panel/I25_dpl14_bf.png",
-  "Inoc\n25°C", "Day 14", 2, "/Users/junbc/Pictures/Panel/I25_dpl14_fl.png",
+  "Inoc\n25°C", "Day 7",  1, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/I25_dpl7_bf.png",
+  "Inoc\n25°C", "Day 7",  2, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/I25_dpl7_fl.png",
+  "Inoc\n25°C", "Day 14", 1, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/I25_dpl14_bf.png",
+  "Inoc\n25°C", "Day 14", 2, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/I25_dpl14_fl.png",
   
-  "Inoc\n32°C", "Day 7",  1, "/Users/junbc/Pictures/Panel/I32_dpl7_bf.png",
-  "Inoc\n32°C", "Day 7",  2, "/Users/junbc/Pictures/Panel/I32_dpl7_fl.png",
-  "Inoc\n32°C", "Day 14", 1, "/Users/junbc/Pictures/Panel/I32_dpl14_bf.png",
-  "Inoc\n32°C", "Day 14", 2, "/Users/junbc/Pictures/Panel/I32_dpl14_fl.png",
+  "Inoc\n32°C", "Day 7",  1, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/I32_dpl7_bf.png",
+  "Inoc\n32°C", "Day 7",  2, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/I32_dpl7_fl.png",
+  "Inoc\n32°C", "Day 14", 1, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/I32_dpl14_bf.png",
+  "Inoc\n32°C", "Day 14", 2, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/I32_dpl14_fl.png",
   
-  "Sym\n25°C", "Day 7",  1, "/Users/junbc/Pictures/Panel/S25_dpl7_bf.png",
-  "Sym\n25°C", "Day 7",  2, "/Users/junbc/Pictures/Panel/S25_dpl7_fl.png",
-  "Sym\n25°C", "Day 14", 1, "/Users/junbc/Pictures/Panel/S25_dpl14_bf.png",
-  "Sym\n25°C", "Day 14", 2, "/Users/junbc/Pictures/Panel/S25_dpl14_fl.png",
+  "Sym\n25°C", "Day 7",  1, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/S25_dpl7_bf.png",
+  "Sym\n25°C", "Day 7",  2, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/S25_dpl7_fl.png",
+  "Sym\n25°C", "Day 14", 1, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/S25_dpl14_bf.png",
+  "Sym\n25°C", "Day 14", 2, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/S25_dpl14_fl.png",
   
-  "Sym\n32°C", "Day 7",  1, "/Users/junbc/Pictures/Panel/S32_dpl7_bf.png",
-  "Sym\n32°C", "Day 7",  2, "/Users/junbc/Pictures/Panel/S32_dpl7_fl.png",
-  "Sym\n32°C", "Day 14", 1, "/Users/junbc/Pictures/Panel/S32_dpl14_bf.png",
-  "Sym\n32°C", "Day 14", 2, "/Users/junbc/Pictures/Panel/S32_dpl14_fl.png"
+  "Sym\n32°C", "Day 7",  1, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/S32_dpl7_bf.png",
+  "Sym\n32°C", "Day 7",  2, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/S32_dpl7_fl.png",
+  "Sym\n32°C", "Day 14", 1, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/S32_dpl14_bf.png",
+  "Sym\n32°C", "Day 14", 2, "~/Documents/GitHub/heating_lacerates_final/data/panel_all/S32_dpl14_fl.png"
 )
 
 
@@ -542,7 +472,7 @@ final_fig
 ggsave(
   filename = "SymDensity_Combined_Figure.png",
   plot = final_fig,
-  path = "~/Documents/GitHub/heatinglacerate/figs/",
+  path = "~/Documents/Github/heating_lacerates_final/figs/",
   device = "png",
 #  width = 7.2,
 #  height = 4.2,
@@ -557,7 +487,7 @@ ggsave(
 ggsave(
   filename = "SymDensity_Combined_Figure.pdf",
   plot = final_fig,
-  path = "~/Documents/GitHub/heatinglacerate/figs/",
+  path = "~/Documents/Github/heating_lacerates_final/figs/",
   device = pdf,
 #  width = 7.2,
 #  height = 4.2,
@@ -590,7 +520,7 @@ anova_df$p_value <- format.pval(anova_df$p_value, digits = 4, eps = 1e-4)
 
 ## Write CSV
 write.csv(anova_df,
-          "~/Documents/GitHub/heatinglacerate/tables/Table_S6_ANOVA.csv",
+          "~/Documents/Github/heating_lacerates_final/tables/Table_S6_ANOVA.csv",
           row.names = FALSE)
 
 
@@ -615,7 +545,7 @@ tukey_df <- tukey_df %>%
 
 ## Write CSV
 write.csv(tukey_df,
-          "~/Documents/GitHub/heatinglacerate/tables/Table_S7_Tukey.csv",
+          "~/Documents/Github/heating_lacerates_final/tables/Table_S7_Tukey.csv",
           row.names = FALSE)
 
 
@@ -644,7 +574,7 @@ library(janitor)
 
 # Read data
 inoc_raw <- read.csv(
-  "data/Lacerate-Inoc-Sym-Density_new.csv",
+  "data/Lacerate-Inoc-Sym-Density.csv",
   check.names = FALSE
 )
 
@@ -964,7 +894,6 @@ final_fig_inoc_sym <- wrap_plots(
 final_fig_inoc_sym
 
 
-
 # =========================================================
 # PANEL C WITH LARGE IMAGES AND FIXED LABEL SPACING
 # Run this whole chunk at once
@@ -980,17 +909,17 @@ library(patchwork)
 img_meta_c8 <- tribble(
   ~row_lab,      ~col_lab, ~file,
   
-  "Sym\n25°C",  "BF", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/S25_dpl14_bf.png",
-  "Sym\n25°C",  "FL", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/S25_dpl14_fl.png",
+  "Sym\n25°C",  "BF", "~/Documents/Github/heating_lacerates_final/data/panel_inoc/S25_dpl14_bf.png",
+  "Sym\n25°C",  "FL", "~/Documents/Github/heating_lacerates_final/data/panel_inoc/S25_dpl14_fl.png",
   
-  "Sym\n32°C",  "BF", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/S32_dpl14_bf.png",
-  "Sym\n32°C",  "FL", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/S32_dpl14_fl.png",
+  "Sym\n32°C",  "BF", "~/Documents/Github/heating_lacerates_final/data/panel_inoc/S32_dpl14_bf.png",
+  "Sym\n32°C",  "FL", "~/Documents/Github/heating_lacerates_final/data/panel_inoc/S32_dpl14_fl.png",
 
-  "Inoc\n25°C", "BF", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/I25_dpl14_bf.png",
-  "Inoc\n25°C", "FL", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/I25_dpl14_fl.png",
+  "Inoc\n25°C", "BF", "~/Documents/Github/heating_lacerates_final/data/panel_inoc/I25_dpl14_bf.png",
+  "Inoc\n25°C", "FL", "~/Documents/Github/heating_lacerates_final/data/panel_inoc/I25_dpl14_fl.png",
   
-  "Inoc\n32°C", "BF", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/I32_dpl14_bf_Snap-995_crop.png",
-  "Inoc\n32°C", "FL", "~/Documents/GitHub/heatinglacerate/data/panel_inoc/I32_dpl14_fl_Snap-994_crop.png"
+  "Inoc\n32°C", "BF", "~/Documents/Github/heating_lacerates_final/data/panel_inoc/I32_dpl14_bf_Snap-995_crop.png",
+  "Inoc\n32°C", "FL", "~/Documents/Github/heating_lacerates_final/data/panel_inoc/I32_dpl14_fl_Snap-994_crop.png"
 )
 
 img_meta_c8
@@ -1112,9 +1041,9 @@ final_fig_inoc_sym_image_panel_c8
 
 
 ggsave(
-  filename = "SymDensity_Combined_Figure_INOC_FINAL.png",
+  filename = "Fig4.png",
   plot = final_fig_inoc_sym_image_panel_c8,
-  path = "~/Documents/GitHub/heatinglacerate/figs/",
+  path = "~/Documents/Github/heating_lacerates_final/figs/",
   device = "png",
   #  width = 7.2,
   #  height = 4.2,
@@ -1127,9 +1056,9 @@ ggsave(
 )
 
 ggsave(
-  filename = "SymDensity_Combined_Figure_INOC_FINAL.pdf",
+  filename = "Fig4.pdf",
   plot = final_fig_inoc_sym_image_panel_c8,
-  path = "~/Documents/GitHub/heatinglacerate/figs/",
+  path = "~/Documents/Github/heating_lacerates_final/figs/",
   device = pdf,
   #  width = 7.2,
   #  height = 4.2,
