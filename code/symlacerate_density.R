@@ -86,13 +86,44 @@ mod_aov <- lm(
   data = symdensity_stats
 )
 
+# ANOVA
 anova_symdensity <- Anova(mod_aov, type = "II")
 print(anova_symdensity)
 
+# Convert to dataframe and save
+anova_symdensity_df <- as.data.frame(anova_symdensity) %>%
+  tibble::rownames_to_column("Factor")
+
+write.csv(
+  anova_symdensity_df,
+  file = file.path(
+    "~/Documents/GitHub/heating_lacerates_final/tables",
+    "TableS4_anova_symdensity.csv"
+  ),
+  row.names = FALSE
+)
+
+# Tukey
 emm_symdensity <- emmeans(mod_aov, ~ treatment | day)
 tukey_symdensity <- summary(pairs(emm_symdensity, adjust = "tukey"))
 print(tukey_symdensity)
 
+# Convert to dataframe and save
+tukey_symdensity_df <- as.data.frame(tukey_symdensity)
+write.csv(
+  tukey_symdensity_df,
+  "TableS5_tukey_symdensity.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  tukey_symdensity_df,
+  file = file.path(
+    "~/Documents/GitHub/heating_lacerates_final/tables",
+    "TableS5_tukey_symdensity.csv"
+  ),
+  row.names = FALSE
+)
 
 # ============================================================
 # 3) Symbiotic lacerate Tukey letters
@@ -287,13 +318,37 @@ mod_inoc <- lm(
   data = inoc_wellmeans
 )
 
+#ANOVA
 anova_inoc <- Anova(mod_inoc, type = "II")
 print(anova_inoc)
 
+anova_inoc_df <- as.data.frame(anova_inoc) %>%
+  tibble::rownames_to_column("Factor")
+
+write.csv(
+  anova_inoc_df,
+  file = file.path(
+    "~/Documents/GitHub/heating_lacerates_final/tables",
+    "TableS6_anova_inoc.csv"
+  ),
+  row.names = FALSE
+)
+
+#Tukey
 emm_inoc <- emmeans(mod_inoc, ~ treatment | day)
 tukey_inoc <- summary(pairs(emm_inoc, adjust = "tukey"))
 print(tukey_inoc)
 
+tukey_inoc_df <- as.data.frame(tukey_inoc)
+
+write.csv(
+  tukey_inoc_df,
+  file = file.path(
+    "~/Documents/GitHub/heating_lacerates_final/tables",
+    "TableS7_tukey_inoc.csv"
+  ),
+  row.names = FALSE
+)
 
 # ============================================================
 # 8) Inoculated lacerate Tukey letters
