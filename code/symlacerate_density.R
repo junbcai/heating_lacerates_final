@@ -380,17 +380,17 @@ p_inoc_symdensity
 img_meta_c8 <- tribble(
   ~row_lab,      ~col_lab, ~file,
   
-  "Sym\n25°C",  "BF", "~/Documents/Github/heating_lacerates_final/data/panel_inoc/S25_dpl14_bf.png",
-  "Sym\n25°C",  "FL", "~/Documents/Github/heating_lacerates_final/data/panel_inoc/S25_dpl14_fl.png",
+  "Sym\n25°C",  "BF", "~/Documents/Github/heating_lacerates_final/images/panel_inoc/S25_dpl14_bf.png",
+  "Sym\n25°C",  "FL", "~/Documents/Github/heating_lacerates_final/images/panel_inoc/S25_dpl14_fl.png",
   
-  "Sym\n32°C",  "BF", "~/Documents/Github/heating_lacerates_final/data/panel_inoc/S32_dpl14_bf.png",
-  "Sym\n32°C",  "FL", "~/Documents/Github/heating_lacerates_final/data/panel_inoc/S32_dpl14_fl.png",
+  "Sym\n32°C",  "BF", "~/Documents/Github/heating_lacerates_final/images/panel_inoc/S32_dpl14_bf.png",
+  "Sym\n32°C",  "FL", "~/Documents/Github/heating_lacerates_final/images/panel_inoc/S32_dpl14_fl.png",
   
-  "Inoc\n25°C", "BF", "~/Documents/Github/heating_lacerates_final/data/panel_inoc/I25_dpl14_bf.png",
-  "Inoc\n25°C", "FL", "~/Documents/Github/heating_lacerates_final/data/panel_inoc/I25_dpl14_fl.png",
+  "Inoc\n25°C", "BF", "~/Documents/Github/heating_lacerates_final/images/panel_inoc/I25_dpl14_bf.png",
+  "Inoc\n25°C", "FL", "~/Documents/Github/heating_lacerates_final/images/panel_inoc/I25_dpl14_fl.png",
   
-  "Inoc\n32°C", "BF", "~/Documents/Github/heating_lacerates_final/data/panel_inoc/I32_dpl14_bf_Snap-995_crop.png",
-  "Inoc\n32°C", "FL", "~/Documents/Github/heating_lacerates_final/data/panel_inoc/I32_dpl14_fl_Snap-994_crop.png"
+  "Inoc\n32°C", "BF", "~/Documents/Github/heating_lacerates_final/images/panel_inoc/I32_dpl14_bf_Snap-995_crop.png",
+  "Inoc\n32°C", "FL", "~/Documents/Github/heating_lacerates_final/images/panel_inoc/I32_dpl14_fl_Snap-994_crop.png"
 )
 
 img_meta_c8
