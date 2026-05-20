@@ -431,19 +431,6 @@ supplemental_tukey_table <- bind_rows(
   arrange(marker, state, time)
 
 # ----------------------------
-# Combine letter tables
-# ----------------------------
-letters_table <- bind_rows(
-  letters_edu_apo,
-  letters_edu_inoc,
-  letters_edu_sym,
-  letters_cas_apo,
-  letters_cas_inoc,
-  letters_cas_sym
-) %>%
-  select(marker, state, time, heat, emmean, SE, df, lower.CL, upper.CL, .group)
-
-# ----------------------------
 # Save stats tables
 # ----------------------------
 write_csv(anova_global_table, "~/Documents/GitHub/heating_lacerates_final/tables/TableS10-confocal_anova_results.csv")
