@@ -110,11 +110,6 @@ print(tukey_symdensity)
 
 # Convert to dataframe and save
 tukey_symdensity_df <- as.data.frame(tukey_symdensity)
-write.csv(
-  tukey_symdensity_df,
-  "TableS5_tukey_symdensity.csv",
-  row.names = FALSE
-)
 
 write.csv(
   tukey_symdensity_df,
@@ -211,63 +206,6 @@ p_symdensity_final <- ggplot(
   )
 
 p_symdensity_final
-
-
-# ============================================================
-# 5) Write supplemental tables for symbiotic lacerates
-# ============================================================
-
-anova_df <- as.data.frame(anova_symdensity)
-
-anova_df$Source <- rownames(anova_df)
-rownames(anova_df) <- NULL
-
-anova_df <- anova_df %>%
-  rename(
-    Sum_Sq = `Sum Sq`,
-    df = Df,
-    F_value = `F value`,
-    p_value = `Pr(>F)`
-  ) %>%
-  select(Source, Sum_Sq, df, F_value, p_value) %>%
-  mutate(
-    p_value = format.pval(p_value, digits = 4, eps = 1e-4),
-    Sum_Sq = round(Sum_Sq, 1),
-    F_value = round(F_value, 2)
-  )
-
-write.csv(
-  anova_df,
-  "~/Documents/Github/heating_lacerates_final/tables/Table_S6_ANOVA.csv",
-  row.names = FALSE
-)
-
-tukey_df <- as.data.frame(tukey_symdensity)
-
-tukey_df <- tukey_df %>%
-  rename(
-    Day = day,
-    Contrast = contrast,
-    Estimate = estimate,
-    SE = SE,
-    df = df,
-    t_ratio = t.ratio,
-    p_value = p.value
-  ) %>%
-  mutate(
-    p_value = format.pval(p_value, digits = 4, eps = 1e-4),
-    Estimate = round(Estimate, 2),
-    SE = round(SE, 2),
-    t_ratio = round(t_ratio, 3)
-  ) %>%
-  select(Day, Contrast, Estimate, SE, df, t_ratio, p_value)
-
-write.csv(
-  tukey_df,
-  "~/Documents/Github/heating_lacerates_final/tables/Table_S7_Tukey.csv",
-  row.names = FALSE
-)
-
 
 # ============================================================
 # 6) Inoculated lacerate symbiont density

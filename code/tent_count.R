@@ -49,9 +49,8 @@ tentcount_2022 <- tentcount_2022 %>%
   mutate(Day = as.factor(day)) %>%
   mutate(Day = dplyr::recode(Day, "0" = "00"))
 
-##Saving table as output
+##Saving table as new object
 tentcount_2022_cleaned <- tentcount_2022
-saveRDS(tentcount_2022_cleaned, file = "tables/Data_Table_Summer2022Data.RDS")
 
 ##Graphing results of Experiment 2
 data_means <- tentcount_2022_cleaned %>%
@@ -159,19 +158,46 @@ plot(sim_res)
 # ----------------------------
 # Type II ANOVA; S1 table
 # ----------------------------
-Anova(model_pois, type = "II")
+anova_tentacle <- Anova(model_pois, type = "II")
+
+anova_tentacle
+
+anova_tentacle_df <- as.data.frame(anova_tentacle) %>%
+  tibble::rownames_to_column("Factor")
+
+write.csv(
+  anova_tentacle_df,
+  file = file.path(
+    "~/Documents/GitHub/heating_lacerates_final/tables",
+    "TableS1_anova_tentacle_number.csv"
+  ),
+  row.names = FALSE
+)
 
 # ----------------------------
 # Post hoc comparisons of temperature effect; S2 table
 # ----------------------------
 emm_temp <- emmeans(model_pois, ~ temp | day_cat, type = "response")
-pairs(emm_temp, adjust = "tukey") 
+tukey_temp <- pairs(emm_temp, adjust = "tukey") 
+
+tukey_temp_df <- as.data.frame(tukey_temp)
+
+write.csv(
+  tukey_temp_df,
+  file = file.path(
+    "~/Documents/GitHub/heating_lacerates_final/tables",
+    "TableS2_tukey_temperature_tentacle_number.csv"
+  ),
+  row.names = FALSE
+)
 
 # ----------------------------
 # Post hoc comparisons of symbiosis effect
 # ----------------------------
 emm_symbiosis <- emmeans(model_pois, ~ symbiosis | day_cat, type = "response")
-pairs(emm_symbiosis, adjust = "tukey") 
+tukey_sym <- pairs(emm_symbiosis, adjust = "tukey") 
+
+tukey_sym_df <- as.data.frame(tukey_sym)
 
 # ----------------------------
 # Figure 1 Sym vs Apo for manuscript
@@ -562,6 +588,31 @@ mortality_glm_2022 <- glm(
 )
 
 summary(mortality_glm_2022)
+
+# Create and save S3 table
+table_s3 <- summary(mortality_glm_2022)$coefficients %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column("Term")
+
+colnames(table_s3) <- c(
+  "Term",
+  "Estimate",
+  "SE",
+  "z",
+  "p"
+)
+
+write.csv(
+  table_s3,
+  file = file.path(
+    "~/Documents/GitHub/heating_lacerates_final/tables",
+    "TableS3_mortality_glm.csv"
+  ),
+  row.names = FALSE
+)
+
+
+
 
 emm_mort_temp_2022 <- emmeans(mortality_glm_2022, ~ temp_label | sym_state)
 emm_mort_sym_2022 <- emmeans(mortality_glm_2022, ~ sym_state | temp_label)

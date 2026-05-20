@@ -809,6 +809,8 @@ shapiro.test(residuals(mod_log))
 car::leveneTest(log(respiration_norm_nmol) ~ treatment * temperature, data = stats_dat2)
 
 summary(mod_log)
+
+
 car::Anova(mod_log, type = "II")
 emmeans(mod_log, pairwise ~ treatment | temperature)
 emmeans(mod_log, pairwise ~ temperature | treatment)
@@ -818,6 +820,60 @@ emm_log_treat <- emmeans(mod_log, ~ treatment | temperature)
 emm_log_treat_resp <- emmeans(mod_log, ~ treatment | temperature, type = "response")
 
 emm_log_temp_resp <- emmeans(mod_log, ~ temperature | treatment, type = "response")
+
+# Table S8. Type II ANOVA for respiration rate
+
+anova_respiration
+
+anova_respiration <- car::Anova(mod_log, type = "II")
+
+anova_respiration_df <- as.data.frame(anova_respiration) %>%
+  tibble::rownames_to_column("Factor")
+anova_respiration_df
+write.csv(
+  anova_respiration_df,
+  file = file.path(
+    "~/Documents/GitHub/heating_lacerates_final/tables",
+    "TableS8_anova_respiration.csv"
+  ),
+  row.names = FALSE
+)
+
+# Table S9A. Treatment comparisons within temperature
+
+emm_log_treat <- emmeans(mod_log, ~ treatment | temperature)
+tukey_resp_treat <- summary(
+  pairs(emm_log_treat, adjust = "tukey")
+)
+tukey_resp_treat_df <- as.data.frame(tukey_resp_treat)
+
+write.csv(
+  tukey_resp_treat_df,
+  file = file.path(
+    "~/Documents/GitHub/heating_lacerates_final/tables",
+    "TableS9A_treatment_within_temperature.csv"
+  ),
+  row.names = FALSE
+)
+
+# Table S9B. Temperature comparisons within treatment
+
+emm_log_temp <- emmeans(mod_log, ~ temperature | treatment)
+
+tukey_resp_temp <- summary(
+  pairs(emm_log_temp, adjust = "tukey")
+)
+
+tukey_resp_temp_df <- as.data.frame(tukey_resp_temp)
+
+write.csv(
+  tukey_resp_temp_df,
+  file = file.path(
+    "~/Documents/GitHub/heating_lacerates_final/tables",
+    "TableS9B_temperature_within_treatment.csv"
+  ),
+  row.names = FALSE
+)
 
 # ============================================================
 # 16) Tukey letters + final oxygen-based figures
