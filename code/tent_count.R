@@ -549,14 +549,13 @@ ggsave(
 )
 
 ### =========================
-### 2022 MORTALITY STATS; S3 table
+### 2022 Survival STATS; S3 table
 ### =========================
 
-# -------------------------
 # Prepare stats dataset
-# -------------------------
 survival_stats_2022 <- df_mortality_2022 %>%
   mutate(
+    alive = 1 - dead,
     sym_state = case_when(
       grepl("APO", treatment) ~ "Aposymbiotic",
       grepl("SYM", treatment) ~ "Symbiotic"
@@ -581,20 +580,21 @@ survival_stats_2022 <- df_mortality_2022 %>%
     )
   )
 
-mortality_glm_2022 <- glm(
-  dead ~ temp_label * sym_state,
+# Binomial GLM for survival
+survival_glm_2022 <- glm(
+  alive ~ temp_label * sym_state,
   data = survival_stats_2022,
   family = binomial
 )
 
-summary(mortality_glm_2022)
+summary(survival_glm_2022)
 
-# Create and save S3 table
-table_s3 <- summary(mortality_glm_2022)$coefficients %>%
+# Create and save survival model coefficient table
+table_survival_2022 <- summary(survival_glm_2022)$coefficients %>%
   as.data.frame() %>%
   tibble::rownames_to_column("Term")
 
-colnames(table_s3) <- c(
+colnames(table_survival_2022) <- c(
   "Term",
   "Estimate",
   "SE",
@@ -603,16 +603,28 @@ colnames(table_s3) <- c(
 )
 
 write.csv(
-  table_s3,
+  table_survival_2022,
   file = file.path(
     "~/Documents/GitHub/heating_lacerates_final/tables",
-    "TableS3_mortality_glm.csv"
+    "TableS3_survival_glm_2022.csv"
   ),
   row.names = FALSE
 )
 
-emm_mort_temp_2022 <- emmeans(mortality_glm_2022, ~ temp_label | sym_state)
-emm_mort_sym_2022 <- emmeans(mortality_glm_2022, ~ sym_state | temp_label)
+# Estimated marginal means
+emm_surv_temp_2022 <- emmeans(
+  survival_glm_2022,
+  ~ temp_label | sym_state
+)
+
+emm_surv_sym_2022 <- emmeans(
+  survival_glm_2022,
+  ~ sym_state | temp_label
+)
+
+emm_surv_temp_2022
+emm_surv_sym_2022
+
 
 # =========================================================
 # SUPPLEMENTARY HEAT RAMP (COLLAPSED, FIG1 STYLE)
