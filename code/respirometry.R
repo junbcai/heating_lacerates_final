@@ -824,7 +824,7 @@ emm_log_temp_resp <- emmeans(mod_log, ~ temperature | treatment, type = "respons
 # Table S8. Type II ANOVA for respiration rate
 
 anova_respiration <- car::Anova(mod_log, type = "II")
-
+anova_respiration
 anova_respiration_df <- as.data.frame(anova_respiration) %>%
   tibble::rownames_to_column("Factor")
 anova_respiration_df
