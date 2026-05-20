@@ -248,30 +248,6 @@ p_survival_flipped_colorbar <- p_survival_base +
 p_survival_flipped_outline
 p_survival_flipped_colorbar
 
-ggsave(
-  filename = "survival_plot_2024.png",
-  plot = p_survival_flipped_colorbar,
-  path = "figs",
-  device = "png",
-  width = 7,
-  height = 5,
-  units = "in",
-  dpi = 600,
-#  compression = "lzw",
-  bg = "white"
-)
-
-ggsave(
-  filename = "survival_plot_2024.pdf",
-  plot = p_survival_flipped_colorbar,
-  path = "figs",
-  device = pdf,
-  width = 7,
-  height = 5,
-  units = "in",
-  bg = "white"
-)
-
 ### =========================
 ### 3A. MORTALITY STATS
 ### =========================
@@ -766,28 +742,6 @@ p_inoc_only <- ggplot(
 
 p_inoc_only
 
-ggsave(
-  filename = "inoc_only_plot_2024.png",
-  plot = p_inoc_only,
-  path = "~/Documents/GitHub/heating_lacerates_final/figs",
-  device = "png",
-  width = 7,
-  height = 5,
-  units = "in",
-  dpi = 600,
-  bg = "white"
-)
-
-ggsave(
-  filename = "inoc_only_plot_2024.pdf",
-  plot = p_inoc_only,
-  path = "~/Documents/GitHub/heating_lacerates_final/figs",
-  device = "pdf",
-  width = 7,
-  height = 5,
-  units = "in",
-  bg = "white"
-)
 
 ### =========================
 ### 5. SYMBIOTIC STATE STATS
