@@ -1390,28 +1390,28 @@ p_inoc_only <- ggplot(
 
 p_inoc_only
 
-ggsave(
-  filename = "URSA2024_InocOnly_Figure.png",
-  plot = p_inoc_only,
-  path = "~/Documents/GitHub/heating_lacerates_final/figs",
-  device = "png",
-  width = 7,
-  height = 5,
-  units = "in",
-  dpi = 600,
-  bg = "white"
-)
+#ggsave(
+#  filename = "URSA2024_InocOnly_Figure.png",
+#  plot = p_inoc_only,
+#  path = "~/Documents/GitHub/heating_lacerates_final/figs",
+#  device = "png",
+#  width = 7,
+#  height = 5,
+#  units = "in",
+#  dpi = 600,
+#  bg = "white"
+#)
 
-ggsave(
-  filename = "URSA2024_InocOnly_Figure.pdf",
-  plot = p_inoc_only,
-  path = "~/Documents/GitHub/heating_lacerates_final/figs",
-  device = "pdf",
-  width = 7,
-  height = 5,
-  units = "in",
-  bg = "white"
-)
+#ggsave(
+#  filename = "URSA2024_InocOnly_Figure.pdf",
+#  plot = p_inoc_only,
+#  path = "~/Documents/GitHub/heating_lacerates_final/figs",
+#  device = "pdf",
+#  width = 7,
+#  height = 5,
+#  units = "in",
+#  bg = "white"
+#)
 
 library(patchwork)
 fig1_fuller_12 <- fig1_fuller +
