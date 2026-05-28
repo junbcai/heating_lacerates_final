@@ -1,12 +1,3 @@
-# PreSens SDR respirometry workflow
-# OXYGEN-CONCENTRATION VERSION
-# Multi-run version using:
-# 1) real clock-time windows
-# 2) manual well assignment
-# 3) manual discard wells
-# 4) pedal disk area normalization
-# 5) oxygen converted from % air saturation to umol/L
-
 library(readr)
 library(readxl)
 library(dplyr)
@@ -357,8 +348,6 @@ for (i in seq_len(nrow(run_info))) {
 }
 
 
-
-
 # 6) COMBINE OUTPUTS
 
 all_settings_used     <- bind_rows(all_settings_used)
@@ -370,10 +359,6 @@ all_rates_with_area   <- bind_rows(all_rates_with_area)
 all_rates_bio         <- bind_rows(all_rates_bio)
 all_missing_area      <- bind_rows(all_missing_area)
 all_dat_long          <- bind_rows(all_dat_long)
-
-# optional alias if you used this old name anywhere
-all_rates <- all_results
-
 
 print(all_rates_bio)
 
@@ -394,7 +379,7 @@ all_rates_bio %>%
 
 all_missing_area
 
-# 13) Full trace plots with captured window overlaid
+# 13) Full trace plots 
 
 all_full_traces <- purrr::map_dfr(all_outputs, "dat_long") %>%
   filter(!is.na(oxygen_conc_umol_l)) %>%
@@ -443,7 +428,7 @@ write_csv(
   file.path(out_dir, "ALL_RUNS_manual_trace_counts_oxygen_concentration_nmol.csv")
 )
 
-## Rework for Supplemental Figure to make hours 0 to 24
+## Make hours 0 to 24
 all_full_traces <- all_full_traces %>%
   group_by(plate_name) %>%
   filter(
@@ -623,7 +608,6 @@ p_pedal_area <- ggplot(
   ) +
   facet_wrap(~ factor(treatment, levels = c("Sym", "Apo"))) +
   
-  # 🔥 4-color scheme
   scale_color_manual(
     values = c(
       "sym_25" = "#3B6FB6",
@@ -738,7 +722,7 @@ ggplot(diag_dat, aes(sample = resid)) +
 emmeans(mod, pairwise ~ treatment | temperature)
 emmeans(mod, pairwise ~ temperature | treatment)
 
-## Logtransformed model
+## Log-transformed model
 mod_log <- lm(log(respiration_norm_nmol) ~ treatment * temperature, data = stats_dat2)
 
 par(mfrow = c(2, 2))

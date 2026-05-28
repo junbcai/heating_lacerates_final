@@ -1,11 +1,13 @@
-# Build 6 individual panels + assemble into a 2x3 figure
-# Panels: (EdU, Caspase) x (Apo, Inoc, Sym)
-
-library(dplyr)
 library(tidyverse)
+library(dplyr)
 library(stringr)
 library(rstatix)
 library(patchwork)
+library(car)
+library(emmeans)
+library(multcomp)
+library(multcompView)
+library(tibble)
 
 rm(list = ls())
 graphics.off()
@@ -13,6 +15,7 @@ graphics.off()
 getwd()
 setwd("~/Documents/GitHub/heating_lacerates_final")
 
+# Data Processing
 raw_confocal_data <- read_csv("data/Lacerate_EdU_Caspase.csv")
 
 confocal_data <- raw_confocal_data %>%
@@ -44,8 +47,6 @@ sample_size_table_wide <- confocal_data %>%
 
 print(sample_size_table_wide)
 
-
-# n per panel and treatment for p6
 p6_n <- confocal_data %>%
   count(marker, state, time, heat) %>%
   arrange(marker, state, time, heat)
@@ -62,7 +63,6 @@ ymax_cas <- confocal_data %>%
   summarise(max_val = max(percentage, na.rm = TRUE)) %>%
   pull(max_val)
 
-# add headroom for letters
 ymax_edu <- ymax_edu + 5
 ymax_cas <- ymax_cas + 5
 
@@ -76,7 +76,6 @@ make_panel <- function(data_sub, panel_title, ylab = NULL, show_legend = FALSE, 
     as.data.frame() %>%
     mutate(.group = str_trim(.group))
   
-  # get max per timepoint for positioning
   y_pos <- data_sub %>%
     group_by(time, heat) %>%
     summarise(y = max(percentage, na.rm = TRUE), .groups = "drop")
@@ -125,6 +124,7 @@ make_panel <- function(data_sub, panel_title, ylab = NULL, show_legend = FALSE, 
 }
 
 
+# Figure
 # ---- EdU (shared scale)
 p_edu_apo <- make_panel(
   filter(confocal_data, marker == "EdU", state == "Apo"),
@@ -247,6 +247,7 @@ p_cas_sym <- make_panel(
 )
 
 
+# Stats
 fit_global <- lm(
   percentage ~ marker + state + heat * time + state * time,
   data = confocal_data
@@ -362,6 +363,7 @@ letters_cas_sym <- cld(emm_cas_sym, adjust = "tukey", Letters = letters) %>%
   as.data.frame() %>%
   mutate(.group = str_trim(.group), marker = "Caspase", state = "Sym")
 
+# Supplemental table
 anova_table <- bind_rows(
   as.data.frame(anova_edu_apo)  %>% rownames_to_column("term") %>% mutate(marker = "EdU",     state = "Apo"),
   as.data.frame(anova_edu_inoc) %>% rownames_to_column("term") %>% mutate(marker = "EdU",     state = "Inoc"),
@@ -372,7 +374,6 @@ anova_table <- bind_rows(
 ) %>%
   select(marker, state, term, everything())
 
-# This is the supplemental table that matches the graph
 supplemental_tukey_table <- bind_rows(
   tukey_edu_apo,
   tukey_edu_inoc,
