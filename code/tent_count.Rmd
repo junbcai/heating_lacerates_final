@@ -580,7 +580,7 @@ library(janitor)
 library(here)
 library(ggh4x)
 
-graphics.off()
+#graphics.off()
 
 setwd("~/Documents/GitHub/heating_lacerates_final")
 
