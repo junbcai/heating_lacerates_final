@@ -27,17 +27,24 @@ library(car)
 library(emmeans)
 library(multcomp)
 library(multcompView)
-library(tibble)      
+library(tibble)
 
 rm(list = ls())
-#graphics.off()
-
-select <- dplyr::select
-filter <- dplyr::filter
-mutate <- dplyr::mutate
 
 getwd()
 setwd("~/Documents/GitHub/heating_lacerates_final")
+
+# Avoid conflicts with functions from other loaded packages
+select    <- dplyr::select
+filter    <- dplyr::filter
+mutate    <- dplyr::mutate
+summarise <- dplyr::summarise
+summarize <- dplyr::summarize
+group_by  <- dplyr::group_by
+arrange   <- dplyr::arrange
+rename    <- dplyr::rename
+count     <- dplyr::count
+left_join <- dplyr::left_join
 
 # Data Processing
 raw_confocal_data <- read_csv("data/Lacerate_EdU_Caspase.csv")
@@ -136,7 +143,10 @@ make_panel <- function(data_sub, panel_title, ylab = NULL, show_legend = FALSE, 
       size = 4,
       color = "black"
     ) +
-    scale_color_manual(values = c("Control" = "blue", "Heat" = "red")) +
+    scale_color_manual(
+      values = c("Control" = "blue", "Heat" = "red"),
+      labels = c("Control" = "Control (25°C)", "Heat" = "Heat Stress (32°C)")
+    ) +
     coord_cartesian(ylim = c(0, y_max), clip = "off") +
     labs(title = panel_title, x = NULL, y = ylab, color = NULL) +
     theme_classic(base_size = 14) +
@@ -147,25 +157,25 @@ make_panel <- function(data_sub, panel_title, ylab = NULL, show_legend = FALSE, 
     )
 }
 
-# Figure
 
+# Figure
 # ---- EdU (shared scale)
 p_edu_apo <- make_panel(
   filter(confocal_data, marker == "EdU", state == "Apo"),
-  "EdU - Apo",
+  "Cell proliferation - Apo",
   "EdU-positive area (%)",
   y_limit = ymax_edu
 )
 
 p_edu_inoc <- make_panel(
   filter(confocal_data, marker == "EdU", state == "Inoc"),
-  "EdU - Inoc",
+  "Cell proliferation - Inoc",
   y_limit = ymax_edu
 )
 
 p_edu_sym <- make_panel(
   filter(confocal_data, marker == "EdU", state == "Sym"),
-  "EdU - Sym",
+  "Cell proliferation - Sym",
   show_legend = TRUE,
   y_limit = ymax_edu
 )
@@ -173,20 +183,20 @@ p_edu_sym <- make_panel(
 # ---- Caspase (shared scale)
 p_cas_apo <- make_panel(
   filter(confocal_data, marker == "Caspase", state == "Apo"),
-  "Caspase - Apo",
+  "Cell death - Apo",
   "Caspase-positive area (%)",
   y_limit = ymax_cas
 )
 
 p_cas_inoc <- make_panel(
   filter(confocal_data, marker == "Caspase", state == "Inoc"),
-  "Caspase - Inoc",
+  "Cell death - Inoc",
   y_limit = ymax_cas
 )
 
 p_cas_sym <- make_panel(
   filter(confocal_data, marker == "Caspase", state == "Sym"),
-  "Caspase - Sym",
+  "Cell death - Sym",
   show_legend = TRUE,
   y_limit = ymax_cas
 )
@@ -271,8 +281,7 @@ p_cas_sym <- make_panel(
 )
 
 
-#Stats
-
+# Stats
 fit_global <- lm(
   percentage ~ marker + state + heat * time + state * time,
   data = confocal_data
