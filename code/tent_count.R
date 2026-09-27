@@ -225,11 +225,15 @@ fig1_fuller <- ggplot(
     y = mean,
     color = treatment,
     linetype = treatment,
+    shape = treatment,
+    fill = treatment,
     group = treatment
   )
 ) +
   my_theme +
+  
   geom_line(linewidth = 1.2) +
+  
   geom_errorbar(
     aes(ymin = mean - se, ymax = mean + se),
     width = 0.2,
@@ -237,22 +241,52 @@ fig1_fuller <- ggplot(
     alpha = 0.8,
     linetype = "solid"
   ) +
-  geom_point(size = 4) +
-
-annotate("segment", x = 5, xend = 11, y = 9.2, yend = 9.2, linewidth = 0.8) +
-  annotate("text", x = 8, y = 9.45, label = "***", size = 6) +
-  annotate("text", x = 12, y = 9.45, label = "**", size = 6) +
-
+  
+  geom_point(
+    size = 4,
+    stroke = 1.5
+  ) +
+  
+  # Significance
+  annotate(
+    "segment",
+    x = 5, xend = 11,
+    y = 9.2, yend = 9.2,
+    linewidth = 0.8
+  ) +
+  annotate(
+    "text",
+    x = 8,
+    y = 9.45,
+    label = "***",
+    size = 6
+  ) +
+  annotate(
+    "text",
+    x = 12,
+    y = 9.45,
+    label = "**",
+    size = 6
+  ) +
+  
   ylab("Mean tentacle number") +
   xlab("Days post laceration (dpl)") +
+  
   scale_y_continuous(
     breaks = seq(0, 10, 2),
     limits = c(0, 10)
   ) +
+  
   scale_x_continuous(
-    breaks = seq(min(fig1fuller_data$day), max(fig1fuller_data$day), 1)
+    breaks = seq(
+      min(fig1fuller_data$day),
+      max(fig1fuller_data$day),
+      1
+    )
   ) +
+  
   scale_color_manual(
+    name = "Treatment",
     values = c(
       "Apo, 25°C" = "#6FA3D9",
       "Sym, 25°C" = "#3B6FB6",
@@ -260,7 +294,9 @@ annotate("segment", x = 5, xend = 11, y = 9.2, yend = 9.2, linewidth = 0.8) +
       "Sym, 32°C" = "#E64B35"
     )
   ) +
+  
   scale_linetype_manual(
+    name = "Treatment",
     values = c(
       "Apo, 25°C" = "dashed",
       "Sym, 25°C" = "solid",
@@ -268,10 +304,27 @@ annotate("segment", x = 5, xend = 11, y = 9.2, yend = 9.2, linewidth = 0.8) +
       "Sym, 32°C" = "solid"
     )
   ) +
-  labs(
-    color = "Treatment",
-    linetype = "Treatment"
+  
+  scale_shape_manual(
+    name = "Treatment",
+    values = c(
+      "Apo, 25°C" = 21,
+      "Sym, 25°C" = 21,
+      "Apo, 32°C" = 21,
+      "Sym, 32°C" = 21
+    )
   ) +
+  
+  scale_fill_manual(
+    name = "Treatment",
+    values = c(
+      "Apo, 25°C" = "white",
+      "Sym, 25°C" = "#3B6FB6",
+      "Apo, 32°C" = "white",
+      "Sym, 32°C" = "#E64B35"
+    )
+  ) +
+  
   theme(
     legend.position = c(0.73, 0.45),
     legend.justification = c("center", "center"),

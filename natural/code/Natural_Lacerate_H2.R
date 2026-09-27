@@ -1,0 +1,1086 @@
+# =========================================================
+# PROJECT: Natural pedal laceration experiment
+# H2-ONLY SUPPLEMENTAL ANALYSIS
+#
+# CLEANED H2 SOURCE FILES:
+#   data/natural_lacerate_metadata.csv
+#   data/natural_lacerate_counts.csv
+#   data/natural_lacerate_sym_density_W7-8.csv
+#
+# FINAL FIGURES:
+#   LETTER:
+#     p_lacerate_combined
+#     p_symbiont_calc
+#     p_symbiont_calc_with_images
+#   EXACT P:
+#     p_lacerate_combined_p
+#     p_symbiont_calc_p
+#     p_symbiont_calc_p_with_images
+#
+# No ggsave()
+# =========================================================
+
+
+# =========================================================
+# 0. PACKAGES + HOUSEKEEPING
+# =========================================================
+
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(grid)
+library(emmeans)
+library(multcomp)
+library(multcompView)
+library(car)
+library(glmmTMB)
+library(DHARMa)
+library(performance)
+library(lme4)
+library(patchwork)
+library(magick)
+
+rm(list = ls())
+graphics.off()
+
+project_dir <- "/Users/junbc/Documents/GitHub/heating_lacerates_final/natural"
+setwd(project_dir)
+
+select <- dplyr::select
+filter <- dplyr::filter
+mutate <- dplyr::mutate
+recode <- dplyr::recode
+
+# =========================================================
+# 1. COMMON CONSTANTS + HELPERS
+# =========================================================
+
+cohort_levels <- c("W1-2", "W3-4", "W5-6", "W7-8", "W9-10")
+
+cohort_labels <- c(
+  "W1-2"  = "Week 1-2",
+  "W3-4"  = "Week 3-4",
+  "W5-6"  = "Week 5-6",
+  "W7-8"  = "Week 7-8",
+  "W9-10" = "Week 9-10"
+)
+
+temp_labels <- c(
+  "H2_25" = "25°C",
+  "H2_32" = "32°C",
+  "H2-25" = "25°C",
+  "H2-32" = "32°C"
+)
+
+temp_colors <- c(
+  "H2_25" = "#3B6FB6",
+  "H2_32" = "#D62728",
+  "H2-25" = "#3B6FB6",
+  "H2-32" = "#D62728"
+)
+
+# Shared visual settings
+BASE_SIZE      <- 18
+AXIS_TEXT_SIZE <- 14
+STRIP_SIZE     <- 16
+LEGEND_TITLE   <- 15
+LEGEND_TEXT    <- 14
+POINT_SIZE     <- 2.8
+POINT_ALPHA    <- 0.65
+JITTER_WIDTH   <- 0.14
+BOX_WIDTH      <- 0.60
+BOX_LINEWIDTH  <- 1.20
+ANNOT_SIZE     <- 5
+PVAL_SIZE      <- 4.5
+BRACKET_WIDTH  <- 0.70
+TAG_SIZE       <- 18
+
+my_theme <- theme_classic(base_size = BASE_SIZE) +
+  theme(
+    axis.title = element_text(size = BASE_SIZE),
+    axis.text = element_text(size = AXIS_TEXT_SIZE),
+    axis.text.x = element_text(angle = 0, hjust = 0.5, vjust = 0.5),
+    strip.text = element_text(face = "bold", size = STRIP_SIZE),
+    strip.background = element_rect(
+      fill = "white",
+      color = "black",
+      linewidth = 1.2
+    ),
+    panel.spacing = unit(1.4, "lines"),
+    legend.title = element_text(size = LEGEND_TITLE),
+    legend.text = element_text(size = LEGEND_TEXT),
+    plot.tag = element_text(size = TAG_SIZE, face = "bold")
+  )
+
+format_exact_p <- function(p) {
+  case_when(
+    is.na(p) ~ "p = NA",
+    p < 0.0001 ~ "p < 0.0001",
+    TRUE ~ paste0("p = ", formatC(p, format = "f", digits = 4))
+  )
+}
+
+temp_color_scale <- function(values) {
+  scale_color_manual(
+    values = temp_colors[values],
+    labels = temp_labels[values]
+  )
+}
+
+temp_x_scale <- function(values) {
+  scale_x_discrete(labels = temp_labels[values])
+}
+
+cohort_facet <- function(ncol = NULL) {
+  facet_wrap(
+    ~ cohort,
+    nrow = 1,
+    ncol = ncol,
+    labeller = labeller(cohort = cohort_labels)
+  )
+}
+
+geom_standard_boxplot <- function(fill = NA) {
+  geom_boxplot(
+    width = BOX_WIDTH,
+    fill = fill,
+    linewidth = BOX_LINEWIDTH,
+    outlier.shape = NA
+  )
+}
+
+geom_standard_jitter <- function(height = 0) {
+  geom_jitter(
+    width = JITTER_WIDTH,
+    height = height,
+    size = POINT_SIZE,
+    alpha = POINT_ALPHA
+  )
+}
+
+add_p_bracket <- function(data, tick_height) {
+  list(
+    geom_segment(
+      data = data,
+      aes(x = 1, xend = 2, y = y_bracket, yend = y_bracket),
+      inherit.aes = FALSE,
+      color = "black",
+      linewidth = BRACKET_WIDTH
+    ),
+    geom_segment(
+      data = data,
+      aes(x = 1, xend = 1, y = y_bracket, yend = y_bracket - tick_height),
+      inherit.aes = FALSE,
+      color = "black",
+      linewidth = BRACKET_WIDTH
+    ),
+    geom_segment(
+      data = data,
+      aes(x = 2, xend = 2, y = y_bracket, yend = y_bracket - tick_height),
+      inherit.aes = FALSE,
+      color = "black",
+      linewidth = BRACKET_WIDTH
+    ),
+    geom_text(
+      data = data,
+      aes(x = 1.5, y = y_text, label = p_label),
+      inherit.aes = FALSE,
+      color = "black",
+      size = PVAL_SIZE
+    )
+  )
+}
+
+
+# =========================================================
+# 2. NATURAL LACERATE PRODUCTION
+# =========================================================
+
+lacerate_meta <- read_csv(
+  file.path(project_dir, "data/natural_lacerate_metadata.csv"),
+  show_col_types = FALSE
+) %>%
+  clean_names() %>%
+  mutate(
+    cohort = factor(cohort, levels = cohort_levels),
+    treatment = factor(treatment, levels = c("H2_25", "H2_32")),
+    genotype = factor(genotype, levels = "H2"),
+    temp = factor(temp, levels = c(25, 32)),
+    tub_id = factor(tub_id),
+    parent_id = factor(parent_id),
+    lacerate_id = as.character(lacerate_id)
+  ) %>%
+  filter(
+    !is.na(treatment),
+    !is.na(genotype),
+    !is.na(cohort),
+    !is.na(lacerate_id),
+    lacerate_id != "",
+    lacerate_id != "DUPLICATE_REMOVED"
+  )
+
+lacerate_unique <- lacerate_meta %>%
+  distinct(lacerate_id, cohort, treatment, genotype, temp, tub_id, parent_id)
+
+lacerates_per_tub <- lacerate_unique %>%
+  count(cohort, treatment, genotype, temp, tub_id, name = "n_lacerates")
+
+print(lacerates_per_tub)
+
+
+# ---------------------------------------------------------
+# 2.1 Statistical letters within each cohort
+# ---------------------------------------------------------
+
+letters_tub_raw <- lacerates_per_tub %>%
+  group_by(cohort) %>%
+  group_modify(~ {
+    dat <- .x
+    
+    if (n_distinct(dat$temp) < 2) {
+      dat %>%
+        distinct(temp) %>%
+        mutate(.group = "a")
+    } else {
+      mod <- lm(n_lacerates ~ temp, data = dat)
+      em <- emmeans(mod, ~ temp)
+      
+      multcomp::cld(
+        em,
+        Letters = letters,
+        adjust = "sidak"
+      ) %>%
+        as.data.frame() %>%
+        select(temp, .group) %>%
+        mutate(.group = str_trim(.group))
+    }
+  }) %>%
+  ungroup()
+
+positions_tub <- lacerates_per_tub %>%
+  group_by(cohort) %>%
+  summarise(
+    cohort_max = max(n_lacerates, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  crossing(
+    temp = factor(c(25, 32), levels = c(25, 32))
+  ) %>%
+  mutate(y_pos = cohort_max + 5)
+
+letters_tub <- positions_tub %>%
+  left_join(
+    letters_tub_raw %>% select(cohort, temp, .group),
+    by = c("cohort", "temp")
+  ) %>%
+  mutate(
+    treatment = factor(
+      paste0("H2_", temp),
+      levels = c("H2_25", "H2_32")
+    )
+  )
+
+
+# ---------------------------------------------------------
+# 2.2 Overall H2 temperature model
+# ---------------------------------------------------------
+
+cat("\n==============================\n")
+cat("NATURAL LACERATE PRODUCTION\n")
+cat("H2: 25°C vs 32°C\n")
+cat("==============================\n")
+
+mod_tub_pois <- glmer(
+  n_lacerates ~ temp + (1 | cohort),
+  data = lacerates_per_tub,
+  family = poisson(link = "log"),
+  control = glmerControl(
+    optimizer = "bobyqa",
+    optCtrl = list(maxfun = 200000)
+  )
+)
+
+sim_tub <- simulateResiduals(mod_tub_pois)
+print(testDispersion(sim_tub))
+print(testZeroInflation(sim_tub))
+
+overdisp_tub <- performance::check_overdispersion(mod_tub_pois)
+print(overdisp_tub)
+
+if (overdisp_tub$dispersion_ratio > 1.5) {
+  mod_tub_final <- glmmTMB(
+    n_lacerates ~ temp + (1 | cohort),
+    data = lacerates_per_tub,
+    family = nbinom2()
+  )
+} else {
+  mod_tub_final <- mod_tub_pois
+}
+
+print(Anova(mod_tub_final, type = "II"))
+
+emm_tub <- emmeans(mod_tub_final, ~ temp, type = "response")
+print(emm_tub)
+print(pairs(emm_tub))
+
+
+# =========================================================
+# 3. FINAL TENTACLE COUNT
+# =========================================================
+
+lacerate_counts <- read_csv(
+  file.path(project_dir, "data/natural_lacerate_counts.csv"),
+  show_col_types = FALSE
+) %>%
+  clean_names() %>%
+  mutate(
+    date = ymd(date),
+    cohort = factor(cohort, levels = cohort_levels),
+    treatment = factor(treatment, levels = c("H2_25", "H2_32")),
+    genotype = factor(genotype, levels = "H2"),
+    temp = factor(temp, levels = c("25", "32")),
+    lacerate_id = as.character(lacerate_id),
+    tentacle_count = as.numeric(tentacle_count)
+  )
+
+final_tentacle_dat <- lacerate_counts %>%
+  filter(!is.na(tentacle_count)) %>%
+  arrange(lacerate_id, cohort, date) %>%
+  group_by(lacerate_id, cohort, treatment, genotype, temp) %>%
+  slice_tail(n = 1) %>%
+  ungroup()
+
+print(final_tentacle_dat)
+
+cat("\n==============================\n")
+cat("FINAL TENTACLE COUNT\n")
+cat("H2: 25°C vs 32°C\n")
+cat("==============================\n")
+
+mod_tentacle <- glmmTMB(
+  tentacle_count ~ temp * cohort,
+  family = nbinom2(),
+  data = final_tentacle_dat
+)
+
+print(Anova(mod_tentacle, type = "II"))
+
+emm_tentacle <- emmeans(
+  mod_tentacle,
+  ~ temp | cohort,
+  type = "response"
+)
+
+print(emm_tentacle)
+print(pairs(emm_tentacle, adjust = "tukey"))
+
+cld_tentacle_df <- as.data.frame(
+  multcomp::cld(
+    emm_tentacle,
+    Letters = letters,
+    adjust = "tukey"
+  )
+) %>%
+  mutate(
+    treatment = factor(
+      paste0("H2_", temp),
+      levels = c("H2_25", "H2_32")
+    ),
+    .group = str_trim(.group)
+  ) %>%
+  left_join(
+    final_tentacle_dat %>%
+      group_by(cohort) %>%
+      summarise(
+        y = max(tentacle_count, na.rm = TRUE) * 1.08,
+        .groups = "drop"
+      ),
+    by = "cohort"
+  )
+
+
+# =========================================================
+# 4. LETTER-VERSION LACERATE FIGURES
+# =========================================================
+
+p_lacerates_tub_5 <- ggplot(
+  lacerates_per_tub,
+  aes(x = treatment, y = n_lacerates, color = treatment)
+) +
+  geom_standard_boxplot() +
+  geom_standard_jitter(height = 0.05) +
+  geom_text(
+    data = letters_tub,
+    aes(x = treatment, y = y_pos, label = .group),
+    inherit.aes = FALSE,
+    size = ANNOT_SIZE,
+    fontface = "bold",
+    color = "black"
+  ) +
+  cohort_facet(ncol = 5) +
+  coord_cartesian(ylim = c(0, 80), clip = "off") +
+  temp_color_scale(c("H2_25", "H2_32")) +
+  temp_x_scale(c("H2_25", "H2_32")) +
+  labs(
+    x = NULL,
+    y = "Number of lacerates per tub",
+    color = "Temperature"
+  ) +
+  my_theme
+
+p_final_tentacles_5 <- ggplot(
+  final_tentacle_dat,
+  aes(x = treatment, y = tentacle_count, color = treatment)
+) +
+  geom_standard_boxplot() +
+  geom_standard_jitter() +
+  geom_text(
+    data = cld_tentacle_df,
+    aes(x = treatment, y = y, label = .group),
+    inherit.aes = FALSE,
+    color = "black",
+    size = ANNOT_SIZE,
+    fontface = "bold"
+  ) +
+  cohort_facet(ncol = 5) +
+  coord_cartesian(ylim = c(0, 27), clip = "off") +
+  temp_color_scale(c("H2_25", "H2_32")) +
+  temp_x_scale(c("H2_25", "H2_32")) +
+  labs(
+    x = "Temperature",
+    y = "Final tentacle count",
+    color = "Temperature"
+  ) +
+  my_theme +
+  theme(
+    legend.position = "right",
+    legend.justification = c(0, 1.4),
+    legend.box.just = "top"
+  )
+
+p_lacerate_combined <-
+  (p_lacerates_tub_5 + guides(color = "none")) /
+  p_final_tentacles_5 +
+  plot_layout(ncol = 1, heights = c(1, 1)) +
+  plot_annotation(tag_levels = "A")
+
+
+# =========================================================
+# 5. SYMBIONT AREA — WEEK 7-8 ONLY
+# =========================================================
+
+lacerate_sym_density <- read_csv(
+  file.path(project_dir, "data/natural_lacerate_sym_density_W7-8.csv"),
+  show_col_types = FALSE
+) %>%
+  clean_names() %>%
+  mutate(
+    label = as.character(label),
+    region = as.character(region),
+    plate = as.character(plate),
+    notes = na_if(str_trim(as.character(notes)), ""),
+    calculation = as.character(calculation),
+    well = str_trim(as.character(well)),
+    type = str_trim(as.character(type)),
+    cohort = str_trim(as.character(cohort)),
+    symbiotic_state = str_trim(as.character(symbiotic_state)),
+    area = parse_number(as.character(area)),
+    min_threshold = parse_number(as.character(min_threshold)),
+    max_threshold = parse_number(as.character(max_threshold)),
+    percent_raw = parse_number(as.character(percent_raw)),
+    treatment = str_trim(as.character(treatment)),
+    genotype = str_trim(as.character(genotype)),
+    temperature = str_trim(as.character(temperature))
+  ) %>%
+  filter(
+    treatment != "#VALUE!",
+    genotype != "#VALUE!",
+    temperature != "#VALUE!",
+    is.na(notes)
+  ) %>%
+  mutate(
+    treatment = factor(treatment, levels = c("H2-25", "H2-32")),
+    genotype = factor(genotype, levels = "H2"),
+    temperature = factor(temperature, levels = c("25", "32")),
+    cohort = factor(cohort, levels = "W7-8")
+  )
+
+symbiont_area_only <- lacerate_sym_density %>%
+  filter(type == "Symbiont Area") %>%
+  mutate(
+    calculation_num = parse_number(as.character(calculation))
+  )
+
+symbiont_area_well_avg <- symbiont_area_only %>%
+  group_by(cohort, treatment, genotype, temperature, well) %>%
+  summarise(
+    mean_calculation = mean(calculation_num, na.rm = TRUE),
+    n_images = n(),
+    .groups = "drop"
+  )
+
+cat("\n==============================\n")
+cat("SYMBIONT AREA — WEEK 7-8 ONLY\n")
+cat("H2: 25°C vs 32°C\n")
+cat("==============================\n")
+
+mod_sym_calc <- lm(
+  mean_calculation ~ temperature,
+  data = symbiont_area_well_avg
+)
+
+print(Anova(mod_sym_calc, type = "II"))
+
+emm_sym_calc <- emmeans(mod_sym_calc, ~ temperature)
+print(emm_sym_calc)
+print(pairs(emm_sym_calc, adjust = "tukey"))
+
+cld_sym_calc_df <- as.data.frame(
+  multcomp::cld(
+    emm_sym_calc,
+    Letters = letters,
+    adjust = "tukey"
+  )
+) %>%
+  mutate(
+    treatment = factor(
+      paste0("H2-", temperature),
+      levels = c("H2-25", "H2-32")
+    ),
+    .group = str_trim(.group)
+  )
+
+sym_calc_ypos <- symbiont_area_well_avg %>%
+  group_by(treatment) %>%
+  summarise(
+    y = max(mean_calculation, na.rm = TRUE) * 1.08,
+    .groups = "drop"
+  )
+
+cld_sym_calc_df <- cld_sym_calc_df %>%
+  left_join(sym_calc_ypos, by = "treatment")
+
+p_symbiont_calc <- ggplot(
+  symbiont_area_well_avg,
+  aes(x = treatment, y = mean_calculation, color = treatment)
+) +
+  geom_standard_boxplot() +
+  geom_standard_jitter() +
+  geom_text(
+    data = cld_sym_calc_df,
+    aes(x = treatment, y = y, label = .group),
+    inherit.aes = FALSE,
+    color = "black",
+    size = ANNOT_SIZE,
+    fontface = "bold"
+  ) +
+  cohort_facet() +
+  temp_color_scale(c("H2-25", "H2-32")) +
+  temp_x_scale(c("H2-25", "H2-32")) +
+  labs(
+    x = "Temperature",
+    y = "Symbiont density (%)",
+    color = "Temperature"
+  ) +
+  my_theme +
+  theme(legend.position = "none")
+
+
+# =========================================================
+# 6. EXACT P-VALUES + BRACKETS
+# =========================================================
+
+# ---------------------------------------------------------
+# 6.1 Natural lacerates per tub
+# ---------------------------------------------------------
+
+pvals_lacerates <- lacerates_per_tub %>%
+  group_by(cohort) %>%
+  group_modify(~ {
+    dat <- .x
+    mod <- lm(n_lacerates ~ temp, data = dat)
+    em <- emmeans(mod, ~ temp)
+    
+    contrast_result <- pairs(
+      em,
+      adjust = "sidak"
+    ) %>%
+      as.data.frame()
+    
+    tibble(p.value = contrast_result$p.value[1])
+  }) %>%
+  ungroup() %>%
+  left_join(
+    lacerates_per_tub %>%
+      group_by(cohort) %>%
+      summarise(
+        max_y = max(n_lacerates, na.rm = TRUE),
+        .groups = "drop"
+      ),
+    by = "cohort"
+  ) %>%
+  mutate(
+    y_bracket = max_y + 5,
+    y_text = max_y + 8,
+    p_label = format_exact_p(p.value)
+  )
+
+p_lacerates_tub_p <- ggplot(
+  lacerates_per_tub,
+  aes(x = treatment, y = n_lacerates, color = treatment)
+) +
+  geom_standard_boxplot() +
+  geom_standard_jitter(height = 0.05) +
+  add_p_bracket(pvals_lacerates, tick_height = 1.5) +
+  cohort_facet(ncol = 5) +
+  coord_cartesian(ylim = c(0, 85), clip = "off") +
+  temp_color_scale(c("H2_25", "H2_32")) +
+  temp_x_scale(c("H2_25", "H2_32")) +
+  labs(
+    x = NULL,
+    y = "Number of lacerates per tub",
+    color = "Temperature"
+  ) +
+  my_theme
+
+
+# ---------------------------------------------------------
+# 6.2 Final tentacle count
+# ---------------------------------------------------------
+
+pvals_tentacles <- pairs(
+  emm_tentacle,
+  adjust = "tukey"
+) %>%
+  as.data.frame() %>%
+  select(cohort, p.value) %>%
+  left_join(
+    final_tentacle_dat %>%
+      group_by(cohort) %>%
+      summarise(
+        max_y = max(tentacle_count, na.rm = TRUE),
+        .groups = "drop"
+      ),
+    by = "cohort"
+  ) %>%
+  mutate(
+    y_bracket = max_y + 1.5,
+    y_text = max_y + 3,
+    p_label = format_exact_p(p.value)
+  )
+
+p_final_tentacles_p <- ggplot(
+  final_tentacle_dat,
+  aes(x = treatment, y = tentacle_count, color = treatment)
+) +
+  geom_standard_boxplot() +
+  geom_standard_jitter() +
+  add_p_bracket(pvals_tentacles, tick_height = 0.7) +
+  cohort_facet(ncol = 5) +
+  coord_cartesian(ylim = c(0, 27), clip = "off") +
+  temp_color_scale(c("H2_25", "H2_32")) +
+  temp_x_scale(c("H2_25", "H2_32")) +
+  labs(
+    x = "Temperature",
+    y = "Final tentacle count",
+    color = "Temperature"
+  ) +
+  my_theme +
+  theme(
+    legend.position = "right",
+    legend.justification = c(0, 1.4),
+    legend.box.just = "top"
+  )
+
+p_lacerate_combined_p <-
+  (p_lacerates_tub_p + guides(color = "none")) /
+  p_final_tentacles_p +
+  plot_layout(ncol = 1, heights = c(1, 1)) +
+  plot_annotation(tag_levels = "A")
+
+
+# ---------------------------------------------------------
+# 6.3 Symbiont area
+# ---------------------------------------------------------
+
+pval_symbiont <- pairs(
+  emm_sym_calc,
+  adjust = "tukey"
+) %>%
+  as.data.frame() %>%
+  slice(1) %>%
+  select(p.value)
+
+symbiont_max <- max(
+  symbiont_area_well_avg$mean_calculation,
+  na.rm = TRUE
+)
+
+pval_symbiont <- pval_symbiont %>%
+  mutate(
+    cohort = factor("W7-8", levels = "W7-8"),
+    y_bracket = symbiont_max + 4,
+    y_text = symbiont_max + 8,
+    p_label = format_exact_p(p.value)
+  )
+
+p_symbiont_calc_p <- ggplot(
+  symbiont_area_well_avg,
+  aes(x = treatment, y = mean_calculation, color = treatment)
+) +
+  geom_standard_boxplot() +
+  geom_standard_jitter() +
+  add_p_bracket(pval_symbiont, tick_height = 2) +
+  cohort_facet() +
+  coord_cartesian(
+    ylim = c(0, symbiont_max + 14),
+    clip = "off"
+  ) +
+  temp_color_scale(c("H2-25", "H2-32")) +
+  temp_x_scale(c("H2-25", "H2-32")) +
+  labs(
+    x = "Temperature",
+    y = "Symbiont density (%)",
+    color = "Temperature"
+  ) +
+  my_theme +
+  theme(legend.position = "none")
+
+
+# =========================================================
+# 7. REPRESENTATIVE IMAGE PANEL
+# =========================================================
+
+img_meta_symbiont <- tribble(
+  ~row_lab, ~col_lab, ~file,
+  "25°C", "BF", file.path(project_dir, "figs/images/NL_25_Snap499_bf.png"),
+  "25°C", "FL", file.path(project_dir, "figs/images/NL_25_Snap498_fl.png"),
+  "32°C", "BF", file.path(project_dir, "figs/images/NL_32_Snap645_bf.png"),
+  "32°C", "FL", file.path(project_dir, "figs/images/NL_32_Snap644_fl.png")
+)
+
+make_symbiont_image_panel <- function(img_meta) {
+  
+  image_size <- 1.28
+  col_gap <- 1.31
+  row_gap <- 1.38
+  
+  img_meta <- img_meta %>%
+    mutate(
+      row_lab = factor(row_lab, levels = c("32°C", "25°C")),
+      col_lab = factor(col_lab, levels = c("BF", "FL")),
+      row_num = as.numeric(row_lab),
+      col_num = as.numeric(col_lab),
+      x_center = col_num * col_gap + 0.34,
+      y_center = row_num * row_gap
+    )
+  
+  p <- ggplot() +
+    xlim(0.52, 3.52) +
+    ylim(0.28, 3.55) +
+    theme_void(base_size = BASE_SIZE, base_family = "sans")
+  
+  for (i in seq_len(nrow(img_meta))) {
+    if (!file.exists(img_meta$file[i])) {
+      warning("Image not found: ", img_meta$file[i])
+      next
+    }
+    
+    img <- image_read(img_meta$file[i])
+    grob <- rasterGrob(as.raster(img), interpolate = TRUE)
+    
+    p <- p +
+      annotation_custom(
+        grob,
+        xmin = img_meta$x_center[i] - image_size / 2,
+        xmax = img_meta$x_center[i] + image_size / 2,
+        ymin = img_meta$y_center[i] - image_size / 2,
+        ymax = img_meta$y_center[i] + image_size / 2
+      )
+  }
+  
+  row_df <- img_meta %>%
+    distinct(row_lab, y_center) %>%
+    mutate(
+      lab = paste0("Sym\n", as.character(row_lab))
+    )
+  
+  col_df <- img_meta %>%
+    distinct(col_lab, x_center) %>%
+    mutate(
+      lab = recode(
+        as.character(col_lab),
+        "BF" = "Brightfield",
+        "FL" = "Fluorescent"
+      )
+    )
+  
+  p +
+    geom_text(
+      data = row_df,
+      aes(x = 0.93, y = y_center, label = lab),
+      hjust = 1,
+      size = ANNOT_SIZE,
+      fontface = "bold",
+      family = "sans"
+    ) +
+    geom_text(
+      data = col_df,
+      aes(x = x_center, y = 0.30, label = lab),
+      vjust = 1,
+      size = ANNOT_SIZE,
+      fontface = "bold",
+      family = "sans"
+    )
+}
+
+symbiont_image_panel <- make_symbiont_image_panel(img_meta_symbiont)
+
+
+# =========================================================
+# 8. SYMBIONT GRAPH + IMAGE COMPOSITES
+# Consistent A/B labels
+# =========================================================
+
+# ---------------------------------------------------------
+# LETTER VERSION
+# ---------------------------------------------------------
+
+p_symbiont_calc_with_images <-
+  wrap_plots(
+    p_symbiont_calc,
+    symbiont_image_panel,
+    ncol = 2,
+    widths = c(1.35, 1.00)
+  ) +
+  plot_annotation(
+    tag_levels = "A"
+  ) &
+  
+  # Apply IDENTICAL tag formatting to both panels
+  theme(
+    plot.tag = element_text(
+      family = "sans",
+      size = 18,
+      face = "bold",
+      color = "black"
+    ),
+    
+    # Upper-left corner of each individual panel
+    plot.tag.position = c(0.025, 0.985)
+  )
+
+
+# ---------------------------------------------------------
+# EXACT P-VALUE VERSION
+# ---------------------------------------------------------
+
+p_symbiont_calc_p_with_images <-
+  wrap_plots(
+    p_symbiont_calc_p,
+    symbiont_image_panel,
+    ncol = 2,
+    widths = c(1.35, 1.00)
+  ) +
+  plot_annotation(
+    tag_levels = "A"
+  ) &
+  
+  # Same formatting
+  theme(
+    plot.tag = element_text(
+      family = "sans",
+      size = 18,
+      face = "bold",
+      color = "black"
+    ),
+    
+    plot.tag.position = c(0.025, 0.985)
+  )
+
+
+# Display
+p_symbiont_calc_with_images
+p_symbiont_calc_p_with_images
+
+# =========================================================
+# 9. FINAL GRAPHICAL OUTPUTS
+# =========================================================
+
+# Letter versions
+p_lacerate_combined
+p_symbiont_calc
+p_symbiont_calc_with_images
+
+# Exact p-value versions
+p_lacerate_combined_p
+p_symbiont_calc_p
+p_symbiont_calc_p_with_images
+
+
+
+
+# =========================================================
+# SAVE FIGURES AS PNG
+# =========================================================
+
+# Letter versions
+
+ggsave(
+  filename = "FigS4.png",
+  plot = p_lacerate_combined,
+  path = "~/Documents/GitHub/heating_lacerates_final/natural/figs",
+  device = "png",
+  width = 18,
+  height = 9.5,
+  units = "in",
+  dpi = 600,
+  bg = "white"
+)
+
+ggsave(
+  filename = "FigS5.png",
+  plot = p_symbiont_calc_with_images,
+  path = "~/Documents/GitHub/heating_lacerates_final/natural/figs",
+  device = "png",
+  width = 12,
+  height = 6.5,
+  units = "in",
+  dpi = 600,
+  bg = "white"
+)
+
+# =========================================================
+# 10. SUPPLEMENTAL STATISTICS TABLES
+# =========================================================
+
+# ---------------------------------------------------------
+# Table S12. Natural lacerate production
+# Overall temperature effect
+# ---------------------------------------------------------
+
+s4a_anova <- car::Anova(mod_tub_final, type = "II") %>%
+  as.data.frame() %>%
+  rownames_to_column("Effect") %>%
+  as_tibble()
+
+print(s4a_anova)
+
+
+# ---------------------------------------------------------
+# Table S13. Natural lacerate production
+# Overall temperature comparison
+# ---------------------------------------------------------
+
+s4a_pairwise <- pairs(
+  emmeans(mod_tub_final, ~ temp, type = "response")
+) %>%
+  as.data.frame() %>%
+  as_tibble()
+
+print(s4a_pairwise)
+
+
+# ---------------------------------------------------------
+# Table S14. Natural lacerate production
+# Temperature comparisons within each 2-week interval
+# ---------------------------------------------------------
+
+s4a_by_cohort <- lacerates_per_tub %>%
+  group_by(cohort) %>%
+  group_modify(~ {
+    
+    mod <- lm(n_lacerates ~ temp, data = .x)
+    
+    pairs(
+      emmeans(mod, ~ temp),
+      adjust = "sidak"
+    ) %>%
+      as.data.frame()
+    
+  }) %>%
+  ungroup() %>%
+  select(
+    cohort,
+    contrast,
+    estimate,
+    SE,
+    df,
+    t.ratio,
+    p.value
+  )
+
+print(s4a_by_cohort)
+
+
+# ---------------------------------------------------------
+# Table S15. Final tentacle count
+# Overall model effects
+# ---------------------------------------------------------
+
+s4b_anova <- car::Anova(mod_tentacle, type = "II") %>%
+  as.data.frame() %>%
+  rownames_to_column("Effect") %>%
+  as_tibble()
+
+print(s4b_anova)
+
+
+# ---------------------------------------------------------
+# Table S16. Final tentacle count
+# Temperature comparisons within each 2-week interval
+# ---------------------------------------------------------
+
+s4b_pairwise <- pairs(
+  emm_tentacle,
+  adjust = "tukey"
+) %>%
+  as.data.frame() %>%
+  as_tibble() %>%
+  select(
+    cohort,
+    contrast,
+    ratio,
+    SE,
+    df,
+    z.ratio,
+    p.value
+  )
+
+print(s4b_pairwise)
+
+
+# ---------------------------------------------------------
+# Table S17. Symbiont density
+# Overall temperature effect
+# ---------------------------------------------------------
+
+s5_anova <- car::Anova(mod_sym_calc, type = "II") %>%
+  as.data.frame() %>%
+  rownames_to_column("Effect") %>%
+  as_tibble()
+
+print(s5_anova)
+
+
+# ---------------------------------------------------------
+# Table S18. Symbiont density
+# Temperature comparison
+# ---------------------------------------------------------
+
+s5_pairwise <- pairs(
+  emm_sym_calc,
+  adjust = "tukey"
+) %>%
+  as.data.frame() %>%
+  as_tibble() %>%
+  select(
+    contrast,
+    estimate,
+    SE,
+    df,
+    t.ratio,
+    p.value
+  )
+
+print(s5_pairwise)

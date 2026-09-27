@@ -25,6 +25,18 @@ graphics.off()
 getwd()
 setwd("/Users/junbc/Documents/GitHub/heating_lacerates_final/")
 
+# Avoid conflicts with functions from other loaded packages
+select    <- dplyr::select
+filter    <- dplyr::filter
+mutate    <- dplyr::mutate
+summarise <- dplyr::summarise
+summarize <- dplyr::summarize
+group_by  <- dplyr::group_by
+arrange   <- dplyr::arrange
+rename    <- dplyr::rename
+count     <- dplyr::count
+left_join <- dplyr::left_join
+
 
 # 1) Symbiotic lacerate symbiont density
 
@@ -168,11 +180,12 @@ p_symdensity_final <- ggplot(
     family = "sans"
   ) +
   scale_color_manual(
-    values = c("Sym-Control" = "#3B6FB6", "Sym-HS" = "#E64B35")
+    values = c("Sym-Control" = "#3B6FB6", "Sym-HS" = "#E64B35"),
+    labels = c("Sym-25°C", "Sym-32°C")
   ) +
   labs(
     x = "Days post laceration",
-    y = "Symbiont density"
+    y = "Symbiont density (%)"
   ) +
   theme(
     panel.grid = element_blank(),
@@ -321,7 +334,7 @@ p_inoc_symdensity <- ggplot(
   ) +
   scale_color_manual(
     values = c("inoc-25C" = "#3B88C3", "inoc-32C" = "#D95F02"),
-    labels = c("Inoc-25C", "Inoc-32C")
+    labels = c("Inoc-25°C", "Inoc-32°C")
   ) +
   labs(
     x = "Days post laceration",

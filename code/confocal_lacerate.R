@@ -15,6 +15,18 @@ graphics.off()
 getwd()
 setwd("~/Documents/GitHub/heating_lacerates_final")
 
+# Avoid conflicts with functions from other loaded packages
+select    <- dplyr::select
+filter    <- dplyr::filter
+mutate    <- dplyr::mutate
+summarise <- dplyr::summarise
+summarize <- dplyr::summarize
+group_by  <- dplyr::group_by
+arrange   <- dplyr::arrange
+rename    <- dplyr::rename
+count     <- dplyr::count
+left_join <- dplyr::left_join
+
 # Data Processing
 raw_confocal_data <- read_csv("data/Lacerate_EdU_Caspase.csv")
 
@@ -112,7 +124,10 @@ make_panel <- function(data_sub, panel_title, ylab = NULL, show_legend = FALSE, 
       size = 4,
       color = "black"
     ) +
-    scale_color_manual(values = c("Control" = "blue", "Heat" = "red")) +
+    scale_color_manual(
+      values = c("Control" = "blue", "Heat" = "red"),
+      labels = c("Control" = "Control (25°C)", "Heat" = "Heat Stress (32°C)")
+    ) +
     coord_cartesian(ylim = c(0, y_max), clip = "off") +
     labs(title = panel_title, x = NULL, y = ylab, color = NULL) +
     theme_classic(base_size = 14) +
@@ -128,20 +143,20 @@ make_panel <- function(data_sub, panel_title, ylab = NULL, show_legend = FALSE, 
 # ---- EdU (shared scale)
 p_edu_apo <- make_panel(
   filter(confocal_data, marker == "EdU", state == "Apo"),
-  "EdU - Apo",
+  "Cell proliferation - Apo",
   "EdU-positive area (%)",
   y_limit = ymax_edu
 )
 
 p_edu_inoc <- make_panel(
   filter(confocal_data, marker == "EdU", state == "Inoc"),
-  "EdU - Inoc",
+  "Cell proliferation - Inoc",
   y_limit = ymax_edu
 )
 
 p_edu_sym <- make_panel(
   filter(confocal_data, marker == "EdU", state == "Sym"),
-  "EdU - Sym",
+  "Cell proliferation - Sym",
   show_legend = TRUE,
   y_limit = ymax_edu
 )
@@ -149,20 +164,20 @@ p_edu_sym <- make_panel(
 # ---- Caspase (shared scale)
 p_cas_apo <- make_panel(
   filter(confocal_data, marker == "Caspase", state == "Apo"),
-  "Caspase - Apo",
+  "Cell death - Apo",
   "Caspase-positive area (%)",
   y_limit = ymax_cas
 )
 
 p_cas_inoc <- make_panel(
   filter(confocal_data, marker == "Caspase", state == "Inoc"),
-  "Caspase - Inoc",
+  "Cell death - Inoc",
   y_limit = ymax_cas
 )
 
 p_cas_sym <- make_panel(
   filter(confocal_data, marker == "Caspase", state == "Sym"),
-  "Caspase - Sym",
+  "Cell death - Sym",
   show_legend = TRUE,
   y_limit = ymax_cas
 )
@@ -393,3 +408,392 @@ supplemental_tukey_table <- bind_rows(
 
 write_csv(anova_global_table, "~/Documents/GitHub/heating_lacerates_final/tables/TableS10-confocal_anova_results.csv")
 write_csv(supplemental_tukey_table, "~/Documents/GitHub/heating_lacerates_final/tables/TableS11-confocal_tukey_table.csv")
+
+
+
+
+
+
+
+
+
+
+
+
+
+# =========================================================
+# Figure 6 for presentation — LARGE FONTS
+# =========================================================
+
+make_panel <- function(
+    data_sub,
+    panel_title,
+    ylab = NULL,
+    show_legend = FALSE,
+    y_limit = NULL
+) {
+  
+  fit <- lm(percentage ~ heat * time, data = data_sub)
+  
+  emm <- emmeans(fit, ~ heat | time)
+  
+  letters_df <- cld(
+    emm,
+    adjust = "tukey",
+    Letters = letters
+  ) %>%
+    as.data.frame() %>%
+    mutate(.group = str_trim(.group))
+  
+  y_pos <- data_sub %>%
+    group_by(time, heat) %>%
+    summarise(
+      y = max(percentage, na.rm = TRUE),
+      .groups = "drop"
+    )
+  
+  letters_df <- left_join(
+    letters_df,
+    y_pos,
+    by = c("time", "heat")
+  ) %>%
+    mutate(y = y + 6.5)
+  
+  if (is.null(y_limit)) {
+    y_max <- max(
+      c(data_sub$percentage, letters_df$y),
+      na.rm = TRUE
+    ) + 2
+  } else {
+    y_max <- y_limit
+  }
+  
+  ggplot(
+    data_sub,
+    aes(
+      x = time,
+      y = percentage,
+      color = heat
+    )
+  ) +
+    
+    geom_jitter(
+      position = position_jitterdodge(
+        jitter.width = 0.12,
+        dodge.width = 0.75
+      ),
+      size = 3.2,
+      alpha = 0.9
+    ) +
+    
+    geom_boxplot(
+      aes(group = interaction(time, heat)),
+      outlier.shape = NA,
+      width = 0.6,
+      fill = NA,
+      linewidth = 1.2,
+      position = position_dodge(width = 0.75)
+    ) +
+    
+    geom_text(
+      data = letters_df,
+      aes(
+        x = time,
+        y = y,
+        label = .group,
+        group = heat
+      ),
+      position = position_dodge(width = 0.75),
+      inherit.aes = FALSE,
+      fontface = "bold",
+      size = 6,
+      color = "black"
+    ) +
+    
+    scale_color_manual(
+      values = c(
+        "Control" = "blue",
+        "Heat" = "red"
+      ),
+      labels = c(
+        "Control" = "Control (25°C)",
+        "Heat" = "Heat Stress (32°C)"
+      )
+    ) +
+    
+    coord_cartesian(
+      ylim = c(0, y_max),
+      clip = "off"
+    ) +
+    
+    labs(
+      title = panel_title,
+      x = NULL,
+      y = ylab,
+      color = NULL
+    ) +
+    
+    theme_classic(base_size = 20) +
+    
+    theme(
+      
+      # Panel titles
+      plot.title = element_text(
+        face = "bold",
+        hjust = 0.5,
+        size = 22
+      ),
+      
+      # X-axis labels: 2dpl, 5dpl, etc.
+      axis.text.x = element_text(
+        size = 17,
+        color = "black"
+      ),
+      
+      # Y-axis numbers
+      axis.text.y = element_text(
+        size = 17,
+        color = "black"
+      ),
+      
+      # Y-axis title
+      axis.title.y = element_text(
+        size = 19,
+        face = "bold",
+        margin = margin(r = 8)
+      ),
+      
+      # Legend
+      legend.text = element_text(
+        size = 17
+      ),
+      
+      legend.position = if (show_legend) "top" else "none",
+      
+      # Axis lines/ticks slightly thicker for presentation
+      axis.line = element_line(
+        linewidth = 0.9
+      ),
+      
+      axis.ticks = element_line(
+        linewidth = 0.8
+      ),
+      
+      axis.ticks.length = unit(
+        0.15,
+        "cm"
+      ),
+      
+      plot.margin = margin(
+        10, 10, 10, 10
+      )
+    )
+}
+
+
+# =========================================================
+# EdU panels
+# =========================================================
+
+p_edu_apo <- make_panel(
+  filter(
+    confocal_data,
+    marker == "EdU",
+    state == "Apo"
+  ),
+  "EdU - Apo",
+  "EdU-positive area (%)",
+  y_limit = ymax_edu
+)
+
+p_edu_inoc <- make_panel(
+  filter(
+    confocal_data,
+    marker == "EdU",
+    state == "Inoc"
+  ),
+  "EdU - Inoc",
+  y_limit = ymax_edu
+)
+
+p_edu_sym <- make_panel(
+  filter(
+    confocal_data,
+    marker == "EdU",
+    state == "Sym"
+  ),
+  "EdU - Sym",
+  show_legend = TRUE,
+  y_limit = ymax_edu
+)
+
+
+# =========================================================
+# Caspase panels
+# =========================================================
+
+p_cas_apo <- make_panel(
+  filter(
+    confocal_data,
+    marker == "Caspase",
+    state == "Apo"
+  ),
+  "Caspase - Apo",
+  "Caspase-positive area (%)",
+  y_limit = ymax_cas
+)
+
+p_cas_inoc <- make_panel(
+  filter(
+    confocal_data,
+    marker == "Caspase",
+    state == "Inoc"
+  ),
+  "Caspase - Inoc",
+  y_limit = ymax_cas
+)
+
+p_cas_sym <- make_panel(
+  filter(
+    confocal_data,
+    marker == "Caspase",
+    state == "Sym"
+  ),
+  "Caspase - Sym",
+  show_legend = TRUE,
+  y_limit = ymax_cas
+)
+
+
+# =========================================================
+# Combine into p6
+# =========================================================
+
+p6 <- (
+  p_edu_apo |
+    p_edu_inoc |
+    p_edu_sym
+) / (
+  p_cas_apo |
+    p_cas_inoc |
+    p_cas_sym
+) +
+  plot_layout(
+    guides = "collect"
+  ) &
+  theme(
+    legend.position = "top",
+    legend.text = element_text(size = 17)
+  )
+
+print(p6)
+
+
+# =========================================================
+# Save presentation version
+# =========================================================
+
+ggsave(
+  filename = "Fig6_confocal_FOR_SLIDE.png",
+  plot = p6,
+  path = "~/Downloads",
+  device = "png",
+  width = 16,
+  height = 8,
+  units = "in",
+  dpi = 600,
+  bg = "white"
+)
+
+
+
+
+# =========================================================
+# EdU = Cell Proliferation
+# =========================================================
+
+p_edu_apo <- make_panel(
+  filter(confocal_data, marker == "EdU", state == "Apo"),
+  "Cell proliferation - Apo",
+  "Cell proliferation (%)",
+  y_limit = ymax_edu
+)
+
+p_edu_inoc <- make_panel(
+  filter(confocal_data, marker == "EdU", state == "Inoc"),
+  "Cell proliferation - Inoc",
+  y_limit = ymax_edu
+)
+
+p_edu_sym <- make_panel(
+  filter(confocal_data, marker == "EdU", state == "Sym"),
+  "Cell proliferation - Sym",
+  show_legend = TRUE,
+  y_limit = ymax_edu
+)
+
+
+# =========================================================
+# Caspase = Cell Death
+# =========================================================
+
+p_cas_apo <- make_panel(
+  filter(confocal_data, marker == "Caspase", state == "Apo"),
+  "Cell death - Apo",
+  "Cell death (%)",
+  y_limit = ymax_cas
+)
+
+p_cas_inoc <- make_panel(
+  filter(confocal_data, marker == "Caspase", state == "Inoc"),
+  "Cell death - Inoc",
+  y_limit = ymax_cas
+)
+
+p_cas_sym <- make_panel(
+  filter(confocal_data, marker == "Caspase", state == "Sym"),
+  "Cell death - Sym",
+  show_legend = TRUE,
+  y_limit = ymax_cas
+)
+
+
+# =========================================================
+# Combine into p6
+# =========================================================
+
+p6 <- (
+  p_edu_apo |
+    p_edu_inoc |
+    p_edu_sym
+) / (
+  p_cas_apo |
+    p_cas_inoc |
+    p_cas_sym
+) +
+  plot_layout(guides = "collect") &
+  theme(
+    legend.position = "top",
+    legend.text = element_text(size = 17)
+  )
+
+print(p6)
+
+
+
+
+# =========================================================
+# Save slide version
+# =========================================================
+
+ggsave(
+  filename = "Fig6_confocal_FOR_SLIDE.png",
+  plot = p6,
+  path = "~/Downloads",
+  device = "png",
+  width = 16,
+  height = 8,
+  units = "in",
+  dpi = 600,
+  bg = "white"
+)

@@ -7,6 +7,8 @@ library(lme4)
 library(car)
 library(emmeans)
 library(ggh4x)
+library(performance)
+library(DHARMa)
 
 graphics.off()
 
