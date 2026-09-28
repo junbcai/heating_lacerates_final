@@ -26,7 +26,7 @@ library(gt)
 library(ggh4x)
 
 rm(list = ls())
-graphics.off()
+#graphics.off()
 
 
 getwd()
