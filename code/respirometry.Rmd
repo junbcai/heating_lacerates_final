@@ -464,7 +464,7 @@ trace_labels_right <- all_full_traces %>%
   slice_max(order_by = time_hours, n = 1, with_ties = FALSE) %>%
   ungroup()
 
-FigS3_all_tracing <- ggplot(
+FigS4_all_tracing <- ggplot(
   all_full_traces,
   aes(
     x = time_hours,
@@ -550,11 +550,11 @@ FigS3_all_tracing <- ggplot(
     legend.position = "right"
   )
 
-print(FigS3_all_tracing)
+print(FigS4_all_tracing)
 
 ggsave(
-  filename = "FigS3_ALL_RUNS_full_trace_manual_groups_labeled_oxygen_concentration_nmol_tight.png",
-  plot = FigS3_all_tracing,
+  filename = "FigS4_ALL_RUNS_full_trace_manual_groups_labeled_oxygen_concentration_nmol_tight.png",
+  plot = FigS4_all_tracing,
   path = "~/Documents/GitHub/heating_lacerates_final/figs",
   device = "png",
   width = 15,
@@ -565,8 +565,8 @@ ggsave(
 )
 
 ggsave(
-  filename = "FigS3_ALL_RUNS_full_trace_manual_groups_labeled_oxygen_concentration_nmol_tight.pdf",
-  plot = FigS3_all_tracing,
+  filename = "FigS4_ALL_RUNS_full_trace_manual_groups_labeled_oxygen_concentration_nmol_tight.pdf",
+  plot = FigS4_all_tracing,
   path = "~/Documents/GitHub/heating_lacerates_final/figs",
   device = pdf,
   width = 15,
@@ -658,7 +658,7 @@ p_pedal_area <- ggplot(
 print(p_pedal_area)
 
 ggsave(
-  filename = "FigS2_Resp_pedal_area.png",
+  filename = "FigS3_Resp_pedal_area.png",
   plot = p_pedal_area,
   path = "~/Documents/GitHub/heating_lacerates_final/figs",
   device = "png",
@@ -670,7 +670,7 @@ ggsave(
 )
 
 ggsave(
-  filename = "FigS2_Resp_pedal_area.pdf",
+  filename = "FigS3_Resp_pedal_area.pdf",
   plot = p_pedal_area,
   path = "~/Documents/GitHub/heating_lacerates_final/figs",
   device = pdf,
