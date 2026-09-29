@@ -363,7 +363,7 @@ cld_tentacle_df <- as.data.frame(
   )
 
 
-## Figure S4
+## Figure S5
 
 p_lacerates_tub_5 <- ggplot(
   lacerates_per_tub,
@@ -782,7 +782,7 @@ make_symbiont_image_panel <- function(img_meta) {
 symbiont_image_panel <- make_symbiont_image_panel(img_meta_symbiont)
 
 
-## Figure S5
+## Figure S6
 
 ## Letter version
 
@@ -838,11 +838,11 @@ p_symbiont_calc_p_with_images <-
 
 ## Figures
 
-```{r fig-s4, fig.width=18, fig.height=9.5}
+```{r fig-s5, fig.width=18, fig.height=9.5}
 print(p_lacerate_combined)
 ```
 
-```{r fig-s5, fig.width=12, fig.height=6.5}
+```{r fig-s6, fig.width=12, fig.height=6.5}
 print(p_symbiont_calc_with_images)
 ```
 
@@ -852,7 +852,7 @@ print(p_symbiont_calc_with_images)
 
 
 ggsave(
-  filename = "FigS4.png",
+  filename = "FigS5.png",
   plot = p_lacerate_combined,
   path = "~/Documents/GitHub/heating_lacerates_final/natural/figs",
   device = "png",
@@ -864,7 +864,7 @@ ggsave(
 )
 
 ggsave(
-  filename = "FigS5.png",
+  filename = "FigS6.png",
   plot = p_symbiont_calc_with_images,
   path = "~/Documents/GitHub/heating_lacerates_final/natural/figs",
   device = "png",
@@ -879,28 +879,28 @@ ggsave(
 
 ## Table S12: Natural lacerate production, overall temperature effect
 
-s4a_anova <- car::Anova(mod_tub_final, type = "II") %>%
+s5a_anova <- car::Anova(mod_tub_final, type = "II") %>%
   as.data.frame() %>%
   rownames_to_column("Effect") %>%
   as_tibble()
 
-print(s4a_anova)
+print(s5a_anova)
 
 
 ## Table S13: Natural lacerate production, overall temperature comparison
 
-s4a_pairwise <- pairs(
+s5a_pairwise <- pairs(
   emmeans(mod_tub_final, ~ temp, type = "response")
 ) %>%
   as.data.frame() %>%
   as_tibble()
 
-print(s4a_pairwise)
+print(s5a_pairwise)
 
 
 ## Table S14: Natural lacerate production by 2-week interval
 
-s4a_by_cohort <- lacerates_per_tub %>%
+s5a_by_cohort <- lacerates_per_tub %>%
   group_by(cohort) %>%
   group_modify(~ {
     
@@ -924,22 +924,22 @@ s4a_by_cohort <- lacerates_per_tub %>%
     p.value
   )
 
-print(s4a_by_cohort)
+print(s5a_by_cohort)
 
 
 ## Table S15: Final tentacle count, overall model
 
-s4b_anova <- car::Anova(mod_tentacle, type = "II") %>%
+s5b_anova <- car::Anova(mod_tentacle, type = "II") %>%
   as.data.frame() %>%
   rownames_to_column("Effect") %>%
   as_tibble()
 
-print(s4b_anova)
+print(s5b_anova)
 
 
 ## Table S16: Final tentacle count by 2-week interval
 
-s4b_pairwise <- pairs(
+s5b_pairwise <- pairs(
   emm_tentacle,
   adjust = "tukey"
 ) %>%
@@ -955,22 +955,22 @@ s4b_pairwise <- pairs(
     p.value
   )
 
-print(s4b_pairwise)
+print(s5b_pairwise)
 
 
 ## Table S17: Symbiont density, overall temperature effect
 
-s5_anova <- car::Anova(mod_sym_calc, type = "II") %>%
+s6_anova <- car::Anova(mod_sym_calc, type = "II") %>%
   as.data.frame() %>%
   rownames_to_column("Effect") %>%
   as_tibble()
 
-print(s5_anova)
+print(s6_anova)
 
 
 ## Table S18: Symbiont density, temperature comparison
 
-s5_pairwise <- pairs(
+s6_pairwise <- pairs(
   emm_sym_calc,
   adjust = "tukey"
 ) %>%
@@ -985,5 +985,5 @@ s5_pairwise <- pairs(
     p.value
   )
 
-print(s5_pairwise)
+print(s6_pairwise)
 ```
