@@ -309,7 +309,7 @@ for (i in seq_len(nrow(run_info))) {
   rates_with_area <- rates_flagged %>%
     left_join(area_this_plate, by = c("plate_name", "well")) %>%
     mutate(
-      respiration_norm = oxygen_decline_rate_umol_l_h / area
+      respiration_norm = oxygen_decline_rate_umol_l_h * chamber_volume_l / area
     )
   
   rates_bio <- rates_with_area %>%
@@ -964,10 +964,12 @@ Fig5 <- ggplot(
   scale_y_continuous(
     expand = expansion(mult = c(0.02, 0.04))
   ) +
-  coord_cartesian(ylim = c(1.15, 2.65)) +
+  coord_cartesian(ylim = c(-3.0, -1.4)) +
   labs(
     x = "Temperature",
-    y = expression(paste("Log"[10], " respiration rate (nmol/L/h/mm"^2, ")"))
+    y = expression(
+      paste("Log"[10], " respiration rate (nmol O"[2], " h"^-1, " mm"^-2, ")")
+    )
   ) +
   theme_bw() +
   theme(
